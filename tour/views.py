@@ -1100,7 +1100,7 @@ def operation_create(request):
                 )
             
             messages.success(request, f"Operasyon başarıyla oluşturuldu: {instance.ticket} (#{instance.buyer_company.name})")
-            return redirect('tour:dashboard')  # İşlem sonrası yönlendirme
+            return redirect('tour:operation_detail', pk=instance.id)  # İşlem sonrası yönlendirme
     else:
         form = OperationForm()
     
@@ -1219,4 +1219,174 @@ def operationitem_delete(request, pk):
     pass
 
 
+
+def operationday_item_create(request, day_id):
+    day = get_object_or_404(Operationday, id=day_id)
+    
+    if request.method == 'POST':
+        form = OperationItemForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.day = day
+            item.company = day.company
+            item.save()
+            return render(request, 'operation/partials/item-table.html', {'item': item})
+        else:
+            print(form.errors)
+    else:
+        form = OperationItemForm()
+        
+    return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
+
+def operation_list(request):
+    """
+    Operasyonları aylara, yıllara ve diğer kriterlere göre listeleyen view fonksiyonu.
+    
+    Aylara ve diğer kriterlere göre filtreleme yapılabilir.
+    Ay seçilmediğinde, mevcut tarih ayı varsayılan olarak seçilir.
+    """
+    # Filtre parametrelerini al
+    month = request.GET.get('month', '')
+    year = request.GET.get('year', '')
+    ticket = request.GET.get('ticket', '')
+    buyer_company_id = request.GET.get('buyer_company', '')
+    selling_staff_id = request.GET.get('selling_staff', '')
+    follow_staff_id = request.GET.get('follow_staff', '')
+    start_date = request.GET.get('start_date', '')
+    end_date = request.GET.get('end_date', '')
+    
+    # Şirket bilgisini al
+    company = None
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        company = request.user.personel.first().company
+    
+    # Temel sorgu - şirkete ait operasyonlar veya admin için tüm operasyonlar
+    if company:
+        queryset = Operation.objects.filter(company=company, is_delete=False).select_related('buyer_company', 'selling_staff', 'follow_staff')
+    elif request.user.is_superuser:
+        queryset = Operation.objects.filter(is_delete=False).select_related('buyer_company', 'selling_staff', 'follow_staff')
+    else:
+        queryset = Operation.objects.none()
+    
+    # Ay filtreleme
+    today = timezone.now().date()
+    current_month = today.month
+    current_year = today.year
+    
+    # Ay seçilmemişse ve diğer filtreler de yoksa, varsayılan olarak mevcut ayı seç
+    if not month and not any([ticket, buyer_company_id, selling_staff_id, follow_staff_id, start_date, end_date]):
+        month = str(current_month)
+        
+    # Yıl seçilmemişse ve ay seçilmişse, varsayılan olarak mevcut yılı seç
+    if month and not year:
+        year = str(current_year)
+    
+    # Filtreleri uygula
+    if month and year:
+        month_int = int(month)
+        year_int = int(year)
+        
+        # Ay başlangıç ve bitiş tarihleri
+        month_start = timezone.datetime(year_int, month_int, 1).date()
+        if month_int == 12:
+            month_end = timezone.datetime(year_int + 1, 1, 1).date() - timezone.timedelta(days=1)
+        else:
+            month_end = timezone.datetime(year_int, month_int + 1, 1).date() - timezone.timedelta(days=1)
+        
+        # Operasyonun tarihi, seçilen ay ile kesişiyorsa filtrele
+        queryset = queryset.filter(
+            Q(start__lte=month_end) & Q(finish__gte=month_start)
+        )
+    
+    # Diğer filtreleri uygula
+    if ticket:
+        queryset = queryset.filter(ticket__icontains=ticket)
+    
+    if buyer_company_id:
+        queryset = queryset.filter(buyer_company_id=buyer_company_id)
+    
+    if selling_staff_id:
+        queryset = queryset.filter(selling_staff_id=selling_staff_id)
+    
+    if follow_staff_id:
+        queryset = queryset.filter(follow_staff_id=follow_staff_id)
+    
+    if start_date:
+        queryset = queryset.filter(start__gte=start_date)
+    
+    if end_date:
+        queryset = queryset.filter(finish__lte=end_date)
+    
+    # İstatistik bilgileri
+    today = timezone.now().date()
+    
+    # Tamamlanan operasyonlar (bitiş tarihi geçmiş)
+    completed_count = queryset.filter(finish__lt=today).count()
+    
+    # Aktif operasyonlar (başlangıç tarihi geçmiş ve bitiş tarihi gelmemiş)
+    active_count = queryset.filter(start__lte=today, finish__gte=today).count()
+    
+    # Gelecek operasyonlar (başlangıç tarihi gelecekte)
+    upcoming_count = queryset.filter(start__gt=today).count()
+    
+    # Yıl listesi - tüm operasyonlardaki yılları al
+    year_list = set()
+    all_operations = Operation.objects.all()
+    for op in all_operations:
+        if op.start:
+            year_list.add(op.start.year)
+        if op.finish:
+            year_list.add(op.finish.year)
+    year_list = sorted(list(year_list))
+    
+    # Müşteri şirketlerini getir
+    if company:
+        companies = Buyercompany.objects.filter(company=company, is_delete=False)
+    elif request.user.is_superuser:
+        companies = Buyercompany.objects.filter(is_delete=False)
+    else:
+        companies = Buyercompany.objects.none()
+    
+    # Personel listesi
+    if company:
+        staffs = Personel.objects.filter(company=company, is_active=True)
+    elif request.user.is_superuser:
+        staffs = Personel.objects.filter(is_active=True)
+    else:
+        staffs = Personel.objects.none()
+    
+    # Operasyonları başlangıç tarihine göre sırala
+    operations = queryset.order_by('-start')
+    
+    # Log kaydı oluştur
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        
+        UserActivityLog.objects.create(
+            company=company,
+            staff=staff,
+            action=f"Operasyon listesini görüntüledi",
+            ip_address=get_client_ip(request),
+            browser_info=request.META.get('HTTP_USER_AGENT', '')
+        )
+    elif request.user.is_superuser:
+        UserActivityLog.objects.create(
+            action=f"Süper kullanıcı operasyon listesini görüntüledi",
+            ip_address=get_client_ip(request),
+            browser_info=request.META.get('HTTP_USER_AGENT', '')
+        )
+    
+    context = {
+        'operations': operations,
+        'selected_month': month,
+        'selected_year': year,
+        'year_list': year_list,
+        'companies': companies,
+        'staffs': staffs,
+        'completed_count': completed_count,
+        'active_count': active_count,
+        'upcoming_count': upcoming_count,
+    }
+    
+    return render(request, 'operation/list.html', context)
 

@@ -19,6 +19,9 @@ urlpatterns = [
     path('operasyon-delete/<int:pk>/', views.operation_delete, name='operation_delete'),
     path('operasyon-edit/<int:pk>/', views.operation_edit, name='operation_edit'),
 
+    # Operasyon İtem ekleme
+    path('operasyon-item-ekle/<int:day_id>/', views.operationday_item_create, name='operationday_item_create'),
+
     # Generic list view için URL pattern
     path('list/<str:model_name>/', views.generic_list, name='generic_list'),
     # Generic create view için URL pattern
@@ -128,4 +131,7 @@ urlpatterns = [
     path('aktivite-maliyet/geri-getir/<int:pk>/', views.restore_object, {'model_name': 'activitycost'}, name='activitycost_restore'),
     path('alici-firma/geri-getir/<int:pk>/', views.restore_object, {'model_name': 'buyercompany'}, name='buyercompany_restore'),
     path('personel/geri-getir/<int:pk>/', views.restore_object, {'model_name': 'personel'}, name='personel_restore'),
+
+    # Operasyon URL'leri
+    path('operasyon-listesi/', views.operation_list, name='operation_list'),
 ]
