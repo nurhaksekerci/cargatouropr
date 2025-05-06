@@ -1,3 +1,6 @@
+{% if search_date %}
+    <h6>Tarih : {{ item.day.date|date:"d.m.Y" }}</h6>
+{% endif %}
 <table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem;">
     <thead class="thead-light">
         <tr>

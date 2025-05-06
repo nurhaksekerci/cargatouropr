@@ -22,6 +22,13 @@ urlpatterns = [
     # Operasyon İtem ekleme
     path('operasyon-item-ekle/<int:day_id>/', views.operationday_item_create, name='operationday_item_create'),
 
+    # Operasyon İtem silme
+    path('operasyon-item-sil/<int:pk>/', views.operationitem_delete, name='operationitem_delete'),
+
+    # İş Listesi
+    path('is-listem/', views.my_job_list, name='my_job_list'),
+    path('is-listesi/', views.job_list, name='job_list'),
+
     # Generic list view için URL pattern
     path('list/<str:model_name>/', views.generic_list, name='generic_list'),
     # Generic create view için URL pattern

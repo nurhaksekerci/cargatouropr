@@ -1390,3 +1390,56 @@ def operation_list(request):
     
     return render(request, 'operation/list.html', context)
 
+
+def job_list(request):
+    staff = request.user.personel.first()
+    today = timezone.now().date()
+    tomorrow = today + timezone.timedelta(days=1)
+    nextday = today + timezone.timedelta(days=2)
+    today_items = Operationitem.objects.filter(day__date=today).order_by('pick_time')
+    tomorrow_items = Operationitem.objects.filter(day__date=tomorrow).order_by('pick_time')
+    nextday_items = Operationitem.objects.filter(day__date=nextday).order_by('pick_time')
+    search_date = None
+
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        if not start_date and not end_date:
+            return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
+        
+        if not end_date:
+            search_date = Operationitem.objects.filter(day__date=start_date, company=staff.company).order_by('pick_time')
+        else:
+            search_date = Operationitem.objects.filter(day__date__range=(start_date, end_date), company=staff.company).order_by('day__date', 'pick_time')
+        return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items, 'search_date': search_date})
+    # Log kaydı oluştur
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        
+        UserActivityLog.objects.create(
+            company=staff.company,
+            staff=staff,
+            action=f"Günlük iş listesini görüntüledi",
+            ip_address=get_client_ip(request),
+            browser_info=request.META.get('HTTP_USER_AGENT', '')
+        )
+    elif request.user.is_superuser:
+        UserActivityLog.objects.create(
+            action=f"Süper kullanıcı günlük iş listesini görüntüledi",
+            ip_address=get_client_ip(request),
+            browser_info=request.META.get('HTTP_USER_AGENT', '')
+        )
+
+    return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
+
+def my_job_list(request):
+    staff = request.user.personel.first()
+    today = timezone.now().date()
+    tomorrow = today + timezone.timedelta(days=1)
+    nextday = today + timezone.timedelta(days=2)
+    today_items = Operationitem.objects.filter(day__date=today, day__operation__follow_staff=staff).order_by('pick_time')
+    tomorrow_items = Operationitem.objects.filter(day__date=tomorrow, day__operation__follow_staff=staff).order_by('pick_time')
+    nextday_items = Operationitem.objects.filter(day__date=nextday, day__operation__follow_staff=staff).order_by('pick_time')
+    return render(request, 'job/list.html', {'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
+
+
