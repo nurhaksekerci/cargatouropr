@@ -1392,54 +1392,199 @@ def operation_list(request):
 
 
 def job_list(request):
-    staff = request.user.personel.first()
+    # Kullanıcı bilgilerini tek seferde al
     today = timezone.now().date()
     tomorrow = today + timezone.timedelta(days=1)
     nextday = today + timezone.timedelta(days=2)
-    today_items = Operationitem.objects.filter(day__date=today).order_by('pick_time')
-    tomorrow_items = Operationitem.objects.filter(day__date=tomorrow).order_by('pick_time')
-    nextday_items = Operationitem.objects.filter(day__date=nextday).order_by('pick_time')
+    job = True
+    
+    company = None
+    staff = None
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        company = staff.company
+    
+    # Performans için ilişkili modelleri tek sorguda getir
+    # Her sorgunun kendine özgü cache anahtarı olacak
+    cache_prefix = f"job_list_{company.id if company else 'admin'}"
+    
+    # Temel sorgu yapısını oluştur - sadece gerekli alanları seç
+    base_query = Operationitem.objects.select_related(
+        'day', 
+        'day__operation', 
+        'day__operation__follow_staff', 
+        'tour', 
+        'transfer', 
+        'vehicle',
+        'supplier'
+    ).filter(is_delete=False)
+    
+    # Arama işlemi
     search_date = None
-
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
-        if not start_date and not end_date:
-            return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
         
-        if not end_date:
-            search_date = Operationitem.objects.filter(day__date=start_date, company=staff.company).order_by('pick_time')
-        else:
-            search_date = Operationitem.objects.filter(day__date__range=(start_date, end_date), company=staff.company).order_by('day__date', 'pick_time')
-        return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items, 'search_date': search_date})
-    # Log kaydı oluştur
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        
+        if start_date:
+            # Önbellek anahtarı oluştur
+            search_cache_key = f"{cache_prefix}_search_{start_date}_{end_date}"
+            # Önbellekten veriyi almaya çalış
+            search_date = cache.get(search_cache_key)
+            
+            # Önbellekte yoksa veritabanından çek
+            if search_date is None:
+                search_query = base_query
+                if company:
+                    search_query = search_query.filter(company=company)
+                    
+                if not end_date:
+                    # Tek gün araması
+                    search_date = search_query.filter(day__date=start_date).order_by('pick_time')
+                else:
+                    # Tarih aralığı araması
+                    search_date = search_query.filter(
+                        day__date__range=(start_date, end_date)
+                    ).order_by('day__date', 'pick_time')
+                    
+                # Sonuçları önbelleğe al (5 dakika)
+                cache.set(search_cache_key, search_date, 300)
+    
+    # Günlük verileri sorgula - önbellekleme ile optimizasyon
+    today_cache_key = f"{cache_prefix}_today_{today}"
+    tomorrow_cache_key = f"{cache_prefix}_tomorrow_{tomorrow}"
+    nextday_cache_key = f"{cache_prefix}_nextday_{nextday}"
+    
+    # Bugün için önbellekten kontrol
+    today_items = cache.get(today_cache_key)
+    if today_items is None:
+        today_items = base_query.filter(day__date=today).order_by('pick_time')
+        cache.set(today_cache_key, today_items, 300)  # 5 dakika önbellek
+    
+    # Yarın için önbellekten kontrol
+    tomorrow_items = cache.get(tomorrow_cache_key)
+    if tomorrow_items is None:
+        tomorrow_items = base_query.filter(day__date=tomorrow).order_by('pick_time')
+        cache.set(tomorrow_cache_key, tomorrow_items, 300)
+    
+    # Sonraki gün için önbellekten kontrol
+    nextday_items = cache.get(nextday_cache_key)
+    if nextday_items is None:
+        nextday_items = base_query.filter(day__date=nextday).order_by('pick_time')
+        cache.set(nextday_cache_key, nextday_items, 300)
+    
+    # Log kaydı oluştur - DRY prensibine uygun kod
+    if staff:
         UserActivityLog.objects.create(
-            company=staff.company,
+            company=company,
             staff=staff,
-            action=f"Günlük iş listesini görüntüledi",
+            action="Günlük iş listesini görüntüledi",
             ip_address=get_client_ip(request),
             browser_info=request.META.get('HTTP_USER_AGENT', '')
         )
     elif request.user.is_superuser:
         UserActivityLog.objects.create(
-            action=f"Süper kullanıcı günlük iş listesini görüntüledi",
+            action="Süper kullanıcı günlük iş listesini görüntüledi",
             ip_address=get_client_ip(request),
             browser_info=request.META.get('HTTP_USER_AGENT', '')
         )
-
-    return render(request, 'job/list.html', {'today': today, 'tomorrow': tomorrow, 'nextday': nextday, 'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
+    
+    # Tek bir context dictionary oluştur
+    context = {
+        'today': today,
+        'tomorrow': tomorrow, 
+        'nextday': nextday, 
+        'today_items': today_items, 
+        'tomorrow_items': tomorrow_items, 
+        'nextday_items': nextday_items,
+        'job': job
+    }
+    
+    # Arama sonuçları varsa ekle
+    if search_date is not None:
+        context['search_date'] = search_date
+    
+    return render(request, 'job/list.html', context)
 
 def my_job_list(request):
-    staff = request.user.personel.first()
+    # Kullanıcı bilgilerini tek seferde al
     today = timezone.now().date()
     tomorrow = today + timezone.timedelta(days=1)
     nextday = today + timezone.timedelta(days=2)
-    today_items = Operationitem.objects.filter(day__date=today, day__operation__follow_staff=staff).order_by('pick_time')
-    tomorrow_items = Operationitem.objects.filter(day__date=tomorrow, day__operation__follow_staff=staff).order_by('pick_time')
-    nextday_items = Operationitem.objects.filter(day__date=nextday, day__operation__follow_staff=staff).order_by('pick_time')
-    return render(request, 'job/list.html', {'today_items': today_items, 'tomorrow_items': tomorrow_items, 'nextday_items': nextday_items})
+    
+    # Kullanıcı kontrolü
+    staff = None
+    company = None
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        company = staff.company
+    else:
+        # Personel yoksa boş sayfa göster
+        return render(request, 'job/list.html', {
+            'today': today,
+            'tomorrow': tomorrow,
+            'nextday': nextday,
+            'today_items': [],
+            'tomorrow_items': [],
+            'nextday_items': []
+        })
+    
+    # Performans için ilişkili modelleri tek sorguda getir
+    base_query = Operationitem.objects.select_related(
+        'day', 
+        'day__operation', 
+        'day__operation__follow_staff', 
+        'day__operation__follow_staff__user',
+        'tour', 
+        'transfer', 
+        'vehicle'
+    ).filter(day__operation__follow_staff=staff)
+    
+    # Arama işlemi
+    search_date = None
+    if request.method == 'POST':
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        
+        if start_date:
+            if not end_date:
+                # Tek gün araması
+                search_date = base_query.filter(day__date=start_date).order_by('pick_time')
+            else:
+                # Tarih aralığı araması
+                search_date = base_query.filter(
+                    day__date__range=(start_date, end_date)
+                ).order_by('day__date', 'pick_time')
+    
+    # Günlük verileri sorgula
+    today_items = base_query.filter(day__date=today).order_by('pick_time')
+    tomorrow_items = base_query.filter(day__date=tomorrow).order_by('pick_time')
+    nextday_items = base_query.filter(day__date=nextday).order_by('pick_time')
+    
+    # Log kaydı oluştur
+    UserActivityLog.objects.create(
+        company=company,
+        staff=staff,
+        action="Kişisel iş listesini görüntüledi",
+        ip_address=get_client_ip(request),
+        browser_info=request.META.get('HTTP_USER_AGENT', '')
+    )
+    
+    # Tek bir context dictionary oluştur
+    context = {
+        'today': today,
+        'tomorrow': tomorrow, 
+        'nextday': nextday, 
+        'today_items': today_items, 
+        'tomorrow_items': tomorrow_items, 
+        'nextday_items': nextday_items,
+        'is_personal': True  # Kişisel liste gösterimi için bayrak
+    }
+    
+    # Arama sonuçları varsa ekle
+    if search_date is not None:
+        context['search_date'] = search_date
+    
+    return render(request, 'job/list.html', context)
+
 
 
