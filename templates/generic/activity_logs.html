@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .log-table {
+        font-size: 0.9rem;
+    }
+    
+    .log-table th {
+        position: relative;
+        white-space: nowrap;
+    }
+    
+    .log-timestamp {
+        white-space: nowrap;
+    }
+    
+    .log-action {
+        max-width: 600px;
+    }
+    
+    .log-details {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 5px;
+    }
+    
+    .log-ip {
+        font-family: monospace;
+        font-size: 0.85rem;
+    }
+    
+    .log-browser {
+        font-size: 0.8rem;
+        color: #777;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .search-box {
+        margin-bottom: 20px;
+    }
+    
+    .filter-info {
+        font-size: 0.9rem;
+        margin-bottom: 15px;
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        border-left: 4px solid #17a2b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-journal-text me-2"></i>{{ page_title }}
+        </h5>
+        <div class="d-flex">
+            <a href="{% url 'tour:dashboard' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-house-door"></i> KONTROL PANELİ
+            </a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <!-- Filtreleme bilgisi -->
+        <div class="filter-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Filtreleme:</strong> {{ filtre_tarih }} tarihinden itibaren olan kayıtlar gösteriliyor.
+        </div>
+        
+        <!-- Arama kutusu -->
+        <div class="search-box">
+            <input type="text" id="logSearchInput" class="form-control" placeholder="Kayıtlarda ara...">
+        </div>
+        
+        {% if logs %}
+            <div class="table-responsive">
+                <table id="logTable" class="table table-striped table-hover log-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>TARİH/SAAT</th>
+                            {% if request.user.is_superuser %}
+                            <th>PERSONEL</th>
+                            <th>ŞİRKET</th>
+                            {% endif %}
+                            <th>İŞLEM</th>
+                            <th>IP ADRESİ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                            <tr>
+                                <td class="log-timestamp">{{ log.timestamp|date:"d.m.Y H:i:s" }}</td>
+                                {% if request.user.is_superuser %}
+                                <td>{{ log.staff|default:"Süper Kullanıcı"|upper }}</td>
+                                <td>{{ log.company.name|default:"-"|upper }}</td>
+                                {% endif %}
+                                <td class="log-action">
+                                    {{ log.action|upper }}
+                                </td>
+                                <td class="log-ip">
+                                    {{ log.ip_address }}
+                                    <div class="log-browser">{{ log.browser_info|truncatechars:150 }}</div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>SON 3 GÜNDE HERHANGİ BİR AKTİVİTE KAYDI BULUNAMADI.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Arama fonksiyonu
+        const searchInput = document.getElementById('logSearchInput');
+        
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const filter = this.value.toUpperCase();
+                const table = document.getElementById('logTable');
+                
+                if (!table) return;
+                
+                const rows = table.getElementsByTagName('tr');
+                
+                for (let i = 1; i < rows.length; i++) {  // 1'den başla (başlık satırını atla)
+                    let found = false;
+                    const cells = rows[i].getElementsByTagName('td');
+                    
+                    for (let j = 0; j < cells.length; j++) {
+                        const cellText = cells[j].textContent || cells[j].innerText;
+                        
+                        if (cellText.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    
+                    rows[i].style.display = found ? '' : 'none';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Silinmiş'|upper }} {{ model_verbose_name_plural }} {{ 'Listesi'|upper }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    th {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px !important; /* Ok için yer aç */
+    }
+    
+    th:hover {
+        background-color: #f5f5f5;
+    }
+    
+    th.asc::after {
+        content: '▲';
+        position: absolute;
+        right: 8px;
+        color: #0d6efd; /* Bootstrap primary rengi */
+        font-size: 14px;
+    }
+    
+    th.desc::after {
+        content: '▼';
+        position: absolute;
+        right: 8px;
+        color: #0d6efd; /* Bootstrap primary rengi */
+        font-size: 14px;
+    }
+    
+    /* İşlemler sütununa sıralama oku gösterme */
+    th.text-end::after {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-trash me-2"></i>{{ 'Silinmiş'|upper }} {{ model_verbose_name_plural|upper }}
+        </h5>
+        <div class="d-flex justify-content-end">
+        <a href="{% url 'tour:'|add:model_name|lower|add:'_list' %}" class="btn btn-light btn-sm">
+            <i class="bi bi-arrow-left"></i> {{ 'Geri Dön'|upper }}
+        </a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <!-- Basit arama kutusu -->
+        <div class="mb-3">
+            <input type="text" id="tableSearchInput" class="form-control" placeholder="Tabloda ara...">
+        </div>
+        
+        {% if objects %}
+            <table id="dataTable" class="table table-striped table-hover">
+                <thead class="table-light">
+                    <tr>
+                        {% if model_name == 'sirket' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Statü'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Başlama Tarihi'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Bitiş Tarihi'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Aktif mi?'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'tour' or model_name == 'transfer' %}
+                            <th>{{ 'Güzergah'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Başlangıç Şehri'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Bitiş Şehri'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'vehicle' %}
+                            <th>{{ 'Araç'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Kapasite'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'guide' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Şehir'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Telefon'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Ücret'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'hotel' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Şehir'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Tek Kişilik'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'İki Kişilik'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Üç Kişilik'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'activity' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Şehir'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'museum' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Şehir'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Ücret'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'supplier' or model_name == 'activitysupplier' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'İletişim'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'cost' %}
+                            <th>{{ 'Tedarikçi'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Tur/Transfer'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Araç Türü'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Para Birimi'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'activitycost' %}
+                            <th>{{ 'Aktivite'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Tedarikçi'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Ücret'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'buyercompany' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Kısa Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'İletişim'|upper }} <span class="sort-icon"></span></th>
+                        {% elif model_name == 'personel' %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Görevi'|upper }} <span class="sort-icon"></span></th>
+                            <th>{{ 'Telefon'|upper }} <span class="sort-icon"></span></th>
+                        {% else %}
+                            <th>{{ 'Adı'|upper }} <span class="sort-icon"></span></th>
+                        {% endif %}
+                        <th class="text-end">{{ 'İşlemler'|upper }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for object in objects %}
+                        <tr>
+                            {% if model_name == 'sirket' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.get_statu_display|upper }}</td>
+                                <td data-sort="{{ object.start|date:'Y-m-d' }}">{{ object.start|date:"d.m.Y" }}</td>
+                                <td data-sort="{{ object.finish|date:'Y-m-d' }}">{{ object.finish|date:"d.m.Y" }}</td>
+                                <td>
+                                    {% if object.is_active %}
+                                        <span class="badge bg-success">{{ 'Aktif'|upper }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">{{ 'Pasif'|upper }}</span>
+                                    {% endif %}
+                                </td>
+                            {% elif model_name == 'tour' or model_name == 'transfer' %}
+                                <td>{{ object.route|upper }}</td>
+                                <td>{{ object.start_city|upper }}</td>
+                                <td>{{ object.finish_city|upper }}</td>
+                            {% elif model_name == 'vehicle' %}
+                                <td>{{ object.vehicle|upper }}</td>
+                                <td>{{ object.capacity }}</td>
+                            {% elif model_name == 'guide' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.city|upper }}</td>
+                                <td>{{ object.phone|upper }}</td>
+                                <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                            {% elif model_name == 'hotel' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.city|upper }}</td>
+                                <td data-sort="{{ object.one_person }}">{{ object.one_person }} {{ object.currency|upper }}</td>
+                                <td data-sort="{{ object.two_person }}">{{ object.two_person }} {{ object.currency|upper }}</td>
+                                <td data-sort="{{ object.tree_person }}">{{ object.tree_person }} {{ object.currency|upper }}</td>
+                            {% elif model_name == 'activity' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.city|upper }}</td>
+                            {% elif model_name == 'museum' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.city|upper }}</td>
+                                <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                            {% elif model_name == 'supplier' or model_name == 'activitysupplier' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.contact|upper }}</td>
+                            {% elif model_name == 'cost' %}
+                                <td>{{ object.supplier|upper }}</td>
+                                <td>{{ object.tour|default:object.transfer|upper }}</td>
+                                <td>
+                                    {% if object.car %}{{ 'Binek'|upper }}: {{ object.car }} {{ object.currency|upper }}<br>{% endif %}
+                                    {% if object.minivan %}{{ 'Minivan'|upper }}: {{ object.minivan }} {{ object.currency|upper }}<br>{% endif %}
+                                    {% if object.minibus %}{{ 'Minibüs'|upper }}: {{ object.minibus }} {{ object.currency|upper }}<br>{% endif %}
+                                    {% if object.midibus %}{{ 'Midibüs'|upper }}: {{ object.midibus }} {{ object.currency|upper }}<br>{% endif %}
+                                    {% if object.bus %}{{ 'Otobüs'|upper }}: {{ object.bus }} {{ object.currency|upper }}{% endif %}
+                                </td>
+                                <td>{{ object.currency|upper }}</td>
+                            {% elif model_name == 'activitycost' %}
+                                <td>{{ object.activity|upper }}</td>
+                                <td>{{ object.supplier|upper }}</td>
+                                <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                            {% elif model_name == 'buyercompany' %}
+                                <td>{{ object.name|upper }}</td>
+                                <td>{{ object.short_name|upper }}</td>
+                                <td>{{ object.contact|upper }}</td>
+                            {% elif model_name == 'personel' %}
+                                <td>{{ object.user.get_full_name|upper }}</td>
+                                <td>{{ object.get_job_display|upper }}</td>
+                                <td>{{ object.phone|upper }}</td>
+                            {% else %}
+                                <td>{{ object|upper }}</td>
+                            {% endif %}
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'tour:'|add:model_name|lower|add:'_restore' pk=object.id %}" class="btn btn-success" onclick="return confirm('{{ 'Bu kaydı geri getirmek istediğinize emin misiniz?'|upper }}');">
+                                        <i class="bi bi-arrow-counterclockwise"></i> {{ 'Geri Getir'|upper }}
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="alert alert-info">
+                {% if query %}
+                    <i class="bi bi-info-circle me-2"></i>"{{ query|upper }}" {{ 'ile ilgili silinmiş kayıt bulunamadı.'|upper }}
+                {% else %}
+                    <i class="bi bi-info-circle me-2"></i>{{ 'Henüz silinmiş'|upper }} {{ model_verbose_name|upper }} {{ 'bulunmamaktadır.'|upper }}
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    // Konsola test mesajı
+    console.log("Merhaba! Bu bir test mesajıdır. JavaScript çalışıyor!");
+    
+    // Sıralama değişkenlerini tanımla
+    let sortColumn = -1;
+    let sortDirection = 'asc';
+    
+    // Tabloyu sıralama fonksiyonu
+    function sortTable(columnIndex) {
+        console.log("sortTable fonksiyonu çağrıldı. Sütun indeksi:", columnIndex);
+        const table = document.getElementById('dataTable');
+        console.log("Tablo bulundu:", table);
+        
+        if (!table) {
+            console.error("Tablo bulunamadı!");
+            return;
+        }
+        
+        const tbody = table.getElementsByTagName('tbody')[0];
+        console.log("Tablo gövdesi (tbody) bulundu:", tbody);
+        
+        if (!tbody) {
+            console.error("Tablo gövdesi bulunamadı!");
+            return;
+        }
+        
+        const rows = tbody.getElementsByTagName('tr');
+        console.log("Toplam satır sayısı:", rows.length);
+        
+        if (rows.length <= 1) {
+            console.log("Sıralanacak yeterli satır yok.");
+            return;
+        }
+        
+        // Tüm başlıklardan sıralama sınıfını kaldır
+        const headers = table.getElementsByTagName('th');
+        console.log("Başlık sayısı:", headers.length);
+        
+        if (columnIndex >= headers.length) {
+            console.error("Geçersiz sütun indeksi!");
+            return;
+        }
+        
+        for (let i = 0; i < headers.length; i++) {
+            headers[i].classList.remove('asc', 'desc');
+            console.log(i + ". başlıktan sınıflar kaldırıldı");
+        }
+        
+        // Sıralama yönünü belirle (toggle mantığı)
+        console.log("Önceki sıralama sütunu:", sortColumn, "Mevcut sütun:", columnIndex);
+        
+        if (sortColumn === columnIndex) {
+            // Aynı sütuna tekrar tıklandı, sıralama yönünü tersine çevir
+            sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            console.log("Aynı sütun tıklandı, sıralama yönü değiştirildi:", sortDirection);
+        } else {
+            // Yeni bir sütuna tıklandı, varsayılan olarak artan sıralama ile başla
+            sortDirection = 'asc';
+            sortColumn = columnIndex;
+            console.log("Farklı sütun tıklandı, sıralama yönü 'asc' olarak ayarlandı");
+        }
+        
+        // Sıralama göstergesini ekle (ok simgesi)
+        try {
+            headers[columnIndex].classList.add(sortDirection);
+            // Sınıfın eklendiğinden emin olmak için kontrol et
+            console.log("Başlık sınıfları şimdi:", headers[columnIndex].className);
+            
+            if (!headers[columnIndex].classList.contains(sortDirection)) {
+                // Force ile sınıfı ekle
+                headers[columnIndex].className += ' ' + sortDirection;
+                console.log("Zorunlu sınıf ekleme sonrası başlık sınıfları:", headers[columnIndex].className);
+            }
+        } catch (e) {
+            console.error("Başlığa sınıf eklerken hata oluştu:", e);
+        }
+        
+        console.log("Seçilen başlığa sınıf eklendi:", sortDirection);
+        console.log("Sıralama yönü:", sortDirection);
+        
+        // Sıralama işlemi
+        console.log("Sıralama işlemi başlatılıyor...");
+        let switchCount = 0;
+        let switching = true;
+        
+        while (switching) {
+            switching = false;
+            console.log("Yeni sıralama döngüsü");
+            let shouldSwitch = false;
+            let i;
+            
+            for (i = 0; i < rows.length - 1; i++) {
+                shouldSwitch = false;
+                
+                // Sıralanacak hücreleri al
+                const x = rows[i].getElementsByTagName('td')[columnIndex];
+                const y = rows[i + 1].getElementsByTagName('td')[columnIndex];
+                
+                if (!x || !y) {
+                    console.log("Hücre bulunamadı, devam ediliyor");
+                    continue;
+                }
+                
+                // data-sort özniteliği varsa onu kullan, yoksa hücre metnini kullan
+                let xValue = x.getAttribute('data-sort') !== null ? x.getAttribute('data-sort') : x.textContent.trim().toLowerCase();
+                let yValue = y.getAttribute('data-sort') !== null ? y.getAttribute('data-sort') : y.textContent.trim().toLowerCase();
+                
+                console.log("Karşılaştırılıyor:", xValue, "ile", yValue);
+                
+                // Sayı olup olmadığını kontrol et
+                if (!isNaN(parseFloat(xValue)) && !isNaN(parseFloat(yValue))) {
+                    xValue = parseFloat(xValue);
+                    yValue = parseFloat(yValue);
+                    console.log("Sayısal değerler dönüştürüldü:", xValue, yValue);
+                }
+                
+                // Sıralama karşılaştırması
+                if (sortDirection === 'asc') {
+                    // Artan sıralama: A'dan Z'ye, küçükten büyüğe
+                    if (xValue > yValue) {
+                        shouldSwitch = true;
+                        console.log("Artan sıralama için değişim gerekli");
+                        break;
+                    }
+                } else {
+                    // Azalan sıralama: Z'den A'ya, büyükten küçüğe
+                    if (xValue < yValue) {
+                        shouldSwitch = true;
+                        console.log("Azalan sıralama için değişim gerekli");
+                        break;
+                    }
+                }
+            }
+            
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchCount++;
+                console.log("Satırlar yer değiştirdi, toplam değişim:", switchCount);
+            } else {
+                console.log("Bu döngüde değişim yapılmadı");
+            }
+        }
+        console.log("Sıralama tamamlandı, toplam değişim sayısı:", switchCount);
+    }
+    
+    // Tabloda arama fonksiyonu
+    function searchTable() {
+        console.log("searchTable fonksiyonu çağrıldı");
+        const input = document.getElementById('tableSearchInput');
+        
+        if (!input) {
+            console.error("Arama giriş kutusu bulunamadı!");
+            return;
+        }
+        
+        const filter = input.value.toLowerCase();
+        const table = document.getElementById('dataTable');
+        
+        if (!table) {
+            console.error("Tablo bulunamadı!");
+            return;
+        }
+        
+        const rows = table.getElementsByTagName('tr');
+        
+        // Her satırı kontrol et (başlıkları atlayarak)
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].getElementsByTagName('td');
+            let found = false;
+            
+            // Her hücreyi kontrol et
+            for (let j = 0; j < cells.length - 1; j++) { // İşlemler sütununu hariç tut
+                const cell = cells[j];
+                if (cell) {
+                    const content = cell.textContent || cell.innerText;
+                    if (content.toLowerCase().indexOf(filter) > -1) {
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            // Eşleşme durumuna göre satırı göster/gizle
+            rows[i].style.display = found ? '' : 'none';
+        }
+    }
+    
+    // Sayfa yüklendiğinde çalıştır
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Sayfa yüklendi, JavaScript hazır!');
+        const dataTable = document.getElementById('dataTable');
+        console.log('dataTable ID\'si ile eleman:', dataTable);
+        
+        if (!dataTable) {
+            console.error("dataTable ID'li tablo bulunamadı!");
+            return;
+        }
+        
+        // Arama kutusuna olay dinleyicisi ekleyelim
+        const searchInput = document.getElementById('tableSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', searchTable);
+            console.log("Arama kutusuna keyup olayı eklendi");
+        } else {
+            console.error("Arama kutusu bulunamadı!");
+        }
+        
+        // Başlıklara tıklama olaylarını doğrudan burada ekleyelim
+        const tableHeaders = document.querySelectorAll('#dataTable th');
+        console.log('Bulunan başlık sayısı:', tableHeaders.length);
+        
+        if (tableHeaders.length === 0) {
+            console.error("Tabloda başlık bulunamadı!");
+            return;
+        }
+        
+        tableHeaders.forEach((header, index) => {
+            if (!header.classList.contains('text-end')) { // İşlemler sütunu hariç
+                // Tıklama olayını ekleyelim
+                header.addEventListener('click', function() {
+                    console.log(index + ". sütun başlığına tıklandı");
+                    
+                    // Önceki sıralama sınıflarını temizle
+                    tableHeaders.forEach(h => h.classList.remove('asc', 'desc'));
+                    
+                    // Tıklanan başlık sütununu sırala
+                    sortTable(index);
+                    
+                    // Başlığın güncel sınıfını kontrol et
+                    console.log("Tıklanan başlığın sınıfları:", header.className);
+                });
+                console.log(index + ". başlığa tıklama olayı eklendi");
+            } else {
+                console.log(index + ". başlık işlemler sütunu, tıklama olayı eklenmedi");
+            }
+        });
+        
+        // Sayfa ilk yüklendiğinde varsayılan olarak ilk sütunu sırala
+        if (tableHeaders.length > 0 && !tableHeaders[0].classList.contains('text-end')) {
+            console.log("Varsayılan olarak ilk sütun sıralanıyor");
+            sortTable(0);
+        }
+    });
+</script>
+{% endblock %} 

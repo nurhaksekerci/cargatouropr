@@ -1,0 +1,194 @@
+<table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem;">
+    <thead class="thead-light">
+        <tr>
+            <th colspan="28">Tur Açıklaması</th>
+            <th colspan="2" class="text-center d-flex gap-2">
+                <button type="button" hx-get="{% url 'tour:operationitem_edit' item.id %}" hx-target="#item-{{ item.id }}" hx-swap="outerHTML" class="btn btn-sm btn-primary">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-danger">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </th>
+        </tr>
+    </thead>
+    <tbody class="">
+        <tr>
+            <td colspan="30">{{ item.description|default:"----" }}</td>
+        </tr>
+    </tbody>
+    <thead class="thead-light">
+        <tr>
+            <th>İşlem Türü</th>
+            <th>Alış Saati</th>
+            <th>Bırakış Saati</th>
+            <th colspan="2">Alış Yeri</th>
+            <th colspan="2">Bırakış Yeri</th>
+
+            <th colspan="2">Tur</th>
+            <th colspan="2">Transfer</th>
+            <th>Araç</th>
+            <th colspan="2">Araç Tedarikçi</th>
+
+            <th colspan="2">Otel</th>
+            <th>Oda Türü</th>
+
+
+            <th>Aktivite</th>
+            <th colspan="2">Aktivite Tedarikçi</th>
+
+            <th colspan="2">Müze</th>
+
+            <th colspan="2">Rehber</th>
+            <th colspan="2">Şoför</th>
+            <th colspan="2">Şoför Telefon</th>
+            <th colspan="2">Plaka</th>
+
+        </tr>
+    </thead>
+    <tbody>
+
+        <tr>
+            <td>{{ item.get_operation_type_display }}</td>
+            <td>{{ item.pick_time|time:"H:i" }}</td>
+            <td>{{ item.release_time|time:"H:i" }}</td>
+            <td colspan="2">{{ item.pick_location }}</td>
+            <td colspan="2">{{ item.release_locationi }}</td>
+
+            <td colspan="2">{{ item.tour|default:"---" }}</td>
+            <td colspan="2">{{ item.transfer|default:"----" }}</td>
+            <td>{{ item.vehicle|default:"----" }}</td>
+            <td colspan="2">{{ item.supplier|default:"----" }}</td>
+
+            <td colspan="2">{{ item.hotel|default:"----" }}</td>
+            <td>{{ item.get_room_type_display }}</td>
+
+
+            <td>{{ item.activity|default:"----" }}</td>
+            <td colspan="2">{{ item.activitysuplier|default:"----" }}</td>
+            <td colspan="2">
+                {% if item.new_museum.all %}
+                    {% for museum in item.new_museum.all %}
+                        {{ forloop.counter }} {{ museum.name }}{% if not forloop.last %}, {% endif %}<br>
+                    {% endfor %}
+                {% else %}
+                    ----
+                {% endif %}
+            </td>
+            <td colspan="2">{{ item.guide|default:"----" }}</td>
+            <td colspan="2">{{ item.driver|default:"----" }}</td>
+            <td colspan="2">{{ item.driver_phone|default:"----" }}</td>
+            <td colspan="2">{{ item.plaka|default:"----" }}</td>
+        </tr>
+
+    </tbody>
+    {% if request.user.personel.first.job == "Operasyon Şefi" or request.user.personel.first.job == "Yönetim" or request.user.personel.first.job == "Sistem Geliştiricisi" %}
+        <thead class="thead-light print_dnone">
+        <tr>
+                <th colspan="3">Otel Ücreti</th>
+                <th colspan="3">Rehber Ücreti</th>
+                <th colspan="3">Aktivite Ücreti</th>
+                <th colspan="3">Müze Ücreti</th>
+                <th colspan="2">Diğer Ücretler</th>
+                <th colspan="2">Araç Ücretleri</th>
+                <th colspan="2">Toplam Maliyet (USD)</th>
+                <th colspan="2">Toplam Maliyet (EUR)</th>
+                <th colspan="2">Toplam Maliyet (TL)</th>
+                <th colspan="2">Toplam Maliyet (RBM)</th>
+                <th colspan="2">Otel Ödemesi Bizde</th>
+                <th colspan="2">Aktivite Ödemesi Bizde</th>
+                <th colspan="2">Müze Ödemesi Bizde</th>
+
+            </tr>
+        </thead>
+
+        <tbody class=" print_dnone">
+            <tr>
+                {% if hotel_price != 0 and hotel_price != 0.00 %}
+                    <td colspan="3">{{ item.hotel_price }} {{ item.hotel_currency }}</td>
+                {% else %}
+                    <td colspan="3">----</td>
+                {% endif %}
+                {% if guide_price != 0 %}
+                    <td colspan="3">{{ item.guide_price }} {{ item.guide_currency }}</td>
+                {% else %}
+                    <td colspan="3">----</td>
+                {% endif %}
+                {% if activity_price != 0 %}
+                    <td colspan="3">{{ item.activity_price }} {{ item.activity_currency }}</td>
+                {% else %}
+                    <td colspan="3">----</td>
+                {% endif %}
+                {% if museum_price != 0 %}
+                    <td colspan="3">{{ item.museum_price }} {{ item.museum_currency }}</td>
+                {% else %}
+                    <td colspan="3">----</td>
+                {% endif %}
+                {% if other_price != 0 %}
+                    <td colspan="2">{{ item.other_price }} {{ item.other_currency }}</td>
+                {% else %}
+                    <td colspan="2">----</td>
+                {% endif %}
+                {% if vehicle_price != 0 %}
+                    <td colspan="2">{{ item.vehicle_price }} {{ item.vehicle_currency }}</td>
+                {% else %}
+                    <td colspan="2">----</td>
+                {% endif %}
+                <td colspan="2">{{ item.usd_cost_price }} </td>
+                <td colspan="2">{{ item.eur_cost_price }} </td>
+                <td colspan="2">{{ item.tl_cost_price }} </td>
+                <td colspan="2">{{ item.rmb_cost_price }} </td>
+                <td colspan="2">{{ item.hotel_payment }} </td>
+                <td colspan="2">{{ item.activity_payment }} </td>
+                <td colspan="2">{{ item.museum_payment }} </td>
+            </tr>
+        </tbody>
+        <thead class="thead-light print_dnone">
+        <tr>
+                <th colspan="5">Araç Satış</th>
+                <th colspan="5">Otel Satış</th>
+                <th colspan="5">Rehber Satış</th>
+                <th colspan="5">Aktivite Satış</th>
+                <th colspan="5">Müze Satış</th>
+                <th colspan="5">Diğer Satış</th>
+
+            </tr>
+        </thead>
+
+        <tbody class=" print_dnone">
+            <tr>
+                {% if vehicle_sell_price != 0 %}
+                    <td colspan="5">{{ item.vehicle_sell_price }} {{ item.vehicle_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+                {% if hotel_price != 0 and hotel_sell_price != 0.00 %}
+                    <td colspan="5">{{ item.hotel_sell_price }} {{ item.hotel_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+                {% if guide_sell_price != 0 %}
+                    <td colspan="5">{{ item.guide_sell_price }} {{ item.guide_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+                {% if activity_sell_price != 0 %}
+                    <td colspan="5">{{ item.activity_sell_price }} {{ item.activity_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+                {% if museum_sell_price != 0 %}
+                    <td colspan="5">{{ item.museum_sell_price }} {{ item.museum_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+                {% if other_sell_price != 0 %}
+                    <td colspan="5">{{ item.other_sell_price }} {{ item.other_sell_currency }}</td>
+                {% else %}
+                    <td colspan="5">----</td>
+                {% endif %}
+
+            </tr>
+        </tbody>
+    {% endif %}
+</table>

@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Operasyon Oluştur{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    
+    .form-section-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 0.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    
+    .required-field label:after {
+        content: " *";
+        color: #dc3545;
+    }
+    
+    .price-group {
+        background-color: #e9ecef;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 15px;
+    }
+    
+    .price-group-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-plus-circle-fill me-2"></i>Yeni Operasyon Oluştur
+        </h5>
+        <div class="d-flex">
+            <a href="{% url 'tour:dashboard' %}" class="btn btn-light btn-sm me-2">
+                <i class="bi bi-house-door"></i> Kontrol Paneli
+            </a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">Formda hatalar var:</h5>
+                {{ form.errors }}
+            </div>
+            {% endif %}
+            
+            <div class="row">
+                <!-- Temel Bilgiler Bölümü -->
+                <div class="col-md-12">
+                    <div class="form-section">
+                        <h5 class="form-section-title">Temel Bilgiler</h5>
+                        
+                        <div class="row">
+                            <div class="col form-group required-field">
+                                <label for="{{ form.title.id_for_label }}">Operasyon Kodu</label>
+                                {{ form.ticket }}
+                            </div>
+                            
+                            <div class="col form-group">
+                                <label for="{{ form.follow_staff.id_for_label }}">Takip Eden Personel</label>
+                                {{ form.follow_staff }}
+                            </div>
+                            <div class="col form-group required-field">
+                                <label for="{{ form.buyer_company.id_for_label }}">Alıcı Firma</label>
+                                {{ form.buyer_company }}
+                            </div>
+                            <div class="col form-group required-field">
+                                <label for="{{ form.start.id_for_label }}">Başlama Tarihi</label>
+                                {{ form.start }}
+                            </div>
+                            
+                            <div class="col form-group required-field">
+                                <label for="{{ form.finish.id_for_label }}">Bitiş Tarihi</label>
+                                {{ form.finish }}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col form-group required-field">
+                                <label for="{{ form.number_passengers.id_for_label }}">Yolcu Sayısı</label>
+                                {{ form.number_passengers }}
+                            </div>
+                            <div class="col form-group">
+                                <label for="{{ form.payment_type.id_for_label }}">Ödeme Türü</label>
+                                {{ form.payment_type }}
+                            </div>
+                            
+                            <div class="col form-group">
+                                <label for="{{ form.payment_channel.id_for_label }}">Ödeme Kanalı</label>
+                                {{ form.payment_channel }}
+                            </div>
+                            
+                            <div class="col form-group">
+                                <label for="{{ form.remaining_payment.id_for_label }}">Kalan Ödeme</label>
+                                {{ form.remaining_payment }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-3 form-group">
+                                <label for="{{ form.tl_sales_price.id_for_label }}">TL Satış Fiyatı</label>
+                                {{ form.tl_sales_price }}
+                            </div>
+                            
+                            <div class="col-md-3 form-group">
+                                <label for="{{ form.usd_sales_price.id_for_label }}">USD Satış Fiyatı</label>
+                                {{ form.usd_sales_price }}
+                            </div>
+                            
+                            <div class="col-md-3 form-group">
+                                <label for="{{ form.eur_sales_price.id_for_label }}">EUR Satış Fiyatı</label>
+                                {{ form.eur_sales_price }}
+                            </div>
+                            
+                            <div class="col-md-3 form-group">
+                                <label for="{{ form.rbm_sales_price.id_for_label }}">RMB Satış Fiyatı</label>
+                                {{ form.rbm_sales_price }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 form-group required-field">
+                                <label for="{{ form.passenger_info.id_for_label }}">Yolcu Bilgileri</label>
+                                {{ form.passenger_info }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 d-flex justify-content-between">
+                <a href="{% url 'tour:dashboard' %}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> İptal
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Operasyonu Kaydet
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form alanlarının değişikliklerini dinle
+        let salesInputs = document.querySelectorAll('[id^="id_"][id$="_sales_price"]');
+        let costInputs = document.querySelectorAll('[id^="id_"][id$="_cost_price"]');
+        
+        // Satış fiyatlarının değişimini izle
+        salesInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                updateTotalSalesDisplay();
+            });
+        });
+        
+        // Maliyet fiyatlarının değişimini izle
+        costInputs.forEach(function(input) {
+            input.addEventListener('change', function() {
+                updateTotalCostDisplay();
+            });
+        });
+        
+        // Sayfa yüklendiğinde toplamları göster
+        updateTotalSalesDisplay();
+        updateTotalCostDisplay();
+        
+        // Toplam satış fiyatını güncelle ve göster
+        function updateTotalSalesDisplay() {
+            let totalSales = 0;
+            salesInputs.forEach(function(input) {
+                let value = parseFloat(input.value) || 0;
+                totalSales += value;
+            });
+            
+            // Eğer bir toplam gösterge elementi oluşturulmuşsa güncelle
+            let totalSalesDisplay = document.getElementById('total-sales-display');
+            if (!totalSalesDisplay) {
+                // Yoksa oluştur
+                let salesSection = document.querySelector('.form-section:nth-child(4)');
+                totalSalesDisplay = document.createElement('div');
+                totalSalesDisplay.id = 'total-sales-display';
+                totalSalesDisplay.className = 'alert alert-info mt-3';
+                totalSalesDisplay.innerHTML = '<strong>Toplam Satış Fiyatı:</strong> <span id="total-sales-value"></span>';
+                salesSection.appendChild(totalSalesDisplay);
+            }
+            
+            document.getElementById('total-sales-value').textContent = totalSales.toFixed(2);
+        }
+        
+        // Toplam maliyet fiyatını güncelle ve göster
+        function updateTotalCostDisplay() {
+            let totalCost = 0;
+            costInputs.forEach(function(input) {
+                let value = parseFloat(input.value) || 0;
+                totalCost += value;
+            });
+            
+            // Eğer bir toplam gösterge elementi oluşturulmuşsa güncelle
+            let totalCostDisplay = document.getElementById('total-cost-display');
+            if (!totalCostDisplay) {
+                // Yoksa oluştur
+                let costSection = document.querySelector('.form-section:nth-child(5)');
+                totalCostDisplay = document.createElement('div');
+                totalCostDisplay.id = 'total-cost-display';
+                totalCostDisplay.className = 'alert alert-info mt-3';
+                totalCostDisplay.innerHTML = '<strong>Toplam Maliyet Fiyatı:</strong> <span id="total-cost-value"></span>';
+                costSection.appendChild(totalCostDisplay);
+            }
+            
+            document.getElementById('total-cost-value').textContent = totalCost.toFixed(2);
+        }
+    });
+</script>
+{% endblock %}

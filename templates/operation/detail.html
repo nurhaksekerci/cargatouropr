@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+{% load tour_filters %}
+
+{% block title %}Operasyon Detayı: {{ operation.ticket }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-section {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    
+    .detail-section-title {
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #495057;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 0.5rem;
+    }
+    
+    .detail-row {
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+    }
+    
+    .detail-value {
+        color: #212529;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: #ddd;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+    }
+    
+    .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: -20px;
+        top: 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #007bff;
+    }
+    
+    .timeline-item.active::before {
+        background-color: #28a745;
+    }
+    
+    .timeline-date {
+        font-weight: 600;
+        color: #007bff;
+        margin-bottom: 0.25rem;
+    }
+    
+    .timeline-content {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        padding: 1rem;
+    }
+    
+    .price-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .price-card-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 0.5rem;
+    }
+    
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.25rem;
+    }
+    
+    .price-total {
+        font-weight: 600;
+        color: #007bff;
+        border-top: 1px solid #eee;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .badge-lg {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+    }
+    
+    .item-card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .item-card-title {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .item-card-body {
+        font-size: 0.9rem;
+    }
+    
+    .operation-status {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-binoculars-fill me-2"></i>Operasyon Detayı: {{ operation.ticket }}
+        </h5>
+        <div class="d-flex">
+            <a href="{% url 'tour:dashboard' %}" class="btn btn-light btn-sm me-2">
+                <i class="bi bi-house-door"></i> Kontrol Paneli
+            </a>
+            <a href="#" class="btn btn-info btn-sm me-2">
+                <i class="bi bi-pencil-square"></i> Düzenle
+            </a>
+            <a href="#" class="btn btn-danger btn-sm">
+                <i class="bi bi-trash"></i> Sil
+            </a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div id="operation-{{ operation.id }}">
+            {% include "operation/partials/operation-card.html" %}
+        </div>
+        <!-- Operasyon Günleri ve Öğeler -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 text-primary">
+                    <i class="bi bi-calendar-week me-2"></i>Operasyon Zaman Çizelgesi
+                </h5>
+                <div>
+                    <a href="#" class="btn btn-sm btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Başa Günü Ekle
+                    </a>
+                    <a href="#" class="btn btn-sm btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Sona Günü Ekle
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if days %}
+                    {% for day in operation.days.all %}
+                        <hr class="mt-3 text-primary">
+                        <div class="d-flex justify-content-between align-self-center mb-3">
+                            <h5 class="card-title">Tarih: {{ day.date|date:"d.m.Y" }}</h5>
+                            <button type="button" class="btn btn-sm btn-primary">
+                                <i class="bi bi-calendar-plus"></i> İtem Ekle
+                            </button>
+                        </div>
+                        <div class="responsive-table" id="day-{{ day.id }}">
+                            {% for item in day.items.all %}
+                                {% include "operation/partials/item-table.html" with item=item %}
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Bu operasyon için henüz gün planlaması yapılmamış.
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="#" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus"></i> Operasyon Günü Ekle
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

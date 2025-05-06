@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}KONTROL PANELİ{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-speedometer2 me-2"></i>HOŞGELDİNİZ, {{ user.get_full_name|upper }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>KULLANICI:</strong> {{ user.username|upper }}</p>
+                        <p class="mb-1"><strong>E-POSTA:</strong> {{ user.email|upper }}</p>
+                        {% if company %}
+                            <p class="mb-1"><strong>ŞİRKET:</strong> {{ company.name|upper }}</p>
+                            <p><strong>DURUM:</strong> 
+                                {% if company.is_active %}
+                                    <span class="badge bg-success">AKTİF</span>
+                                {% else %}
+                                    <span class="badge bg-danger">PASİF</span>
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p class="text-warning"><strong>ŞİRKET BAĞLANTISI YOK!</strong></p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <p class="mb-1"><strong>SON GİRİŞ:</strong> {% now "d.m.Y H:i" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-signpost-2 text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">TURLAR</h5>
+                <h2 class="mb-0">{{ tours_count }}</h2>
+                <p class="text-muted">KAYITLI TUR</p>
+                <p class="text-danger">SİLİNMİŞ TUR: {{ deleted_tours_count }}</p>
+                <a href="{% url 'tour:tour_list' %}" class="btn btn-outline-primary">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-truck text-success" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">TRANSFERLER</h5>
+                <h2 class="mb-0">{{ transfers_count }}</h2>
+                <p class="text-muted">KAYITLI TRANSFER</p>
+                <p class="text-danger">SİLİNMİŞ TRANSFER: {{ deleted_transfers_count }}</p>
+                <a href="{% url 'tour:transfer_list' %}" class="btn btn-outline-success">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-car-front text-danger" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">ARAÇLAR</h5>
+                <h2 class="mb-0">{{ vehicles_count }}</h2>
+                <p class="text-muted">KAYITLI ARAÇ</p>
+                <p class="text-danger">SİLİNMİŞ ARAÇ: {{ deleted_vehicles_count }}</p>
+                <a href="{% url 'tour:vehicle_list' %}" class="btn btn-outline-danger">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-car-front text-danger" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">ARAÇ TEDARİKÇİLERİ</h5>
+                <h2 class="mb-0">{{ suppliers_count }}</h2>
+                <p class="text-muted">KAYITLI TEDARİKÇİ</p>
+                <p class="text-danger">SİLİNMİŞ TEDARİKÇİ: {{ deleted_suppliers_count }}</p>
+                <a href="{% url 'tour:supplier_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-trophy text-secondary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">AKTİVİTELER</h5>
+                <h2 class="mb-0">{{ activities_count }}</h2>
+                <p class="text-muted">KAYITLI AKTİVİTE</p>
+                <p class="text-danger">SİLİNMİŞ AKTİVİTE: {{ deleted_activities_count }}</p>
+                <a href="{% url 'tour:activity_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-trophy text-secondary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">AKTİVİTE TEDARİKÇİLERİ</h5>
+                <h2 class="mb-0">{{ activitysuppliers_count }}</h2>
+                <p class="text-muted">KAYITLI AKTİVİTE TEDARİKÇİ</p>
+                <p class="text-danger">SİLİNMİŞ AKTİVİTE TEDARİKÇİ: {{ deleted_activitysuppliers_count }}</p>
+                <a href="{% url 'tour:activitysupplier_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge text-info" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">REHBERLER</h5>
+                <h2 class="mb-0">{{ guides_count }}</h2>
+                <p class="text-muted">KAYITLI REHBER</p>
+                <p class="text-danger">SİLİNMİŞ REHBER: {{ deleted_guides_count }}</p>
+                <a href="{% url 'tour:guide_list' %}" class="btn btn-outline-info">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-house-fill text-warning" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">OTELLER</h5>
+                <h2 class="mb-0">{{ hotels_count }}</h2>
+                <p class="text-muted">KAYITLI OTEL</p>
+                <p class="text-danger">SİLİNMİŞ OTEL: {{ deleted_hotels_count }}</p>
+                <a href="{% url 'tour:hotel_list' %}" class="btn btn-outline-warning">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+    
+    
+    
+    
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-cash-coin text-secondary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">ALICI FİRMA</h5>
+                <h2 class="mb-0">{{ buyercompanies_count }}</h2>
+                <p class="text-muted">KAYITLI ALICI FİRMA</p>
+                <p class="text-danger">SİLİNMİŞ ALICI FİRMA: {{ deleted_buyercompanies_count }}</p>
+                <a href="{% url 'tour:buyercompany_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

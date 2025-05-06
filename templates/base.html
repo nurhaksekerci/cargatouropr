@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-100">
+{% include 'includes/head.html' %}
+<body class="d-flex flex-column h-100">
+    {% include 'includes/navbar.html' %}
+
+    <!-- İçerik -->
+    <main class="flex-shrink-0">
+        <div class="container py-4">
+            {% include 'includes/messages.html' %}
+
+            <!-- Ana İçerik -->
+            <div class="row">
+                <div class="col-12">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer mt-auto">
+        {% include 'includes/footer.html' %}
+    </footer>
+    {% block extra_js %}{% endblock %} 
+</body>
+</html>

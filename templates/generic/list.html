@@ -1,0 +1,332 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ model_verbose_name_plural }} Listesi{% endblock %}
+
+{% block extra_css %}
+<style>
+    th {
+        cursor: pointer;
+        position: relative;
+        padding-right: 20px !important; /* Ok için yer aç */
+    }
+    
+    th:hover {
+        background-color: #f5f5f5;
+    }
+    
+    th.asc::after {
+        content: '▲';
+        position: absolute;
+        right: 8px;
+        color: #0d6efd; /* Bootstrap primary rengi */
+        font-size: 14px;
+    }
+    
+    th.desc::after {
+        content: '▼';
+        position: absolute;
+        right: 8px;
+        color: #0d6efd; /* Bootstrap primary rengi */
+        font-size: 14px;
+    }
+    
+    /* İşlemler sütununa sıralama oku gösterme */
+    th.text-end::after {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-list-ul me-2"></i>{{ model_verbose_name_plural }}
+        </h5>
+        <div class="d-flex justify-content-end">
+        <a href="{% url 'tour:'|add:model_name|lower|add:'_deleted_list' %}" class="btn btn-danger btn-sm me-2">
+            <i class="bi bi-trash"></i> Silinmiş {{ model_verbose_name_plural }}
+        </a>
+        <a href="{% url 'tour:'|add:model_name|lower|add:'_create' %}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-circle"></i> Yeni {{ model_verbose_name }}
+        </a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <!-- Basit arama kutusu -->
+        <div class="mb-3">
+            <input type="text" id="tableSearchInput" class="form-control" placeholder="Tabloda ara..."
+                   autocomplete="off">
+        </div>
+        
+        {% if objects %}
+            <div class="table-responsive">
+                <table id="dataTable" class="table table-striped table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            {% if model_name == 'sirket' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Statü'|upper }}</th>
+                                <th>{{ 'Başlama Tarihi'|upper }}</th>
+                                <th>{{ 'Bitiş Tarihi'|upper }}</th>
+                                <th>{{ 'Aktif mi?'|upper }}</th>
+                            {% elif model_name == 'tour' or model_name == 'transfer' %}
+                                <th>{{ 'Güzergah'|upper }}</th>
+                                <th>{{ 'Başlangıç Şehri'|upper }}</th>
+                                <th>{{ 'Bitiş Şehri'|upper }}</th>
+                            {% elif model_name == 'vehicle' %}
+                                <th>{{ 'Araç'|upper }}</th>
+                                <th>{{ 'Kapasite'|upper }}</th>
+                            {% elif model_name == 'guide' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Şehir'|upper }}</th>
+                                <th>{{ 'Telefon'|upper }}</th>
+                                <th>{{ 'Ücret'|upper }}</th>
+                            {% elif model_name == 'hotel' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Şehir'|upper }}</th>
+                                <th>{{ 'Tek Kişilik'|upper }}</th>
+                                <th>{{ 'İki Kişilik'|upper }}</th>
+                                <th>{{ 'Üç Kişilik'|upper }}</th>
+                            {% elif model_name == 'activity' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Şehir'|upper }}</th>
+                            {% elif model_name == 'museum' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Şehir'|upper }}</th>
+                                <th>{{ 'Ücret'|upper }}</th>
+                            {% elif model_name == 'supplier' or model_name == 'activitysupplier' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'İletişim'|upper }}</th>
+                            {% elif model_name == 'cost' %}
+                                <th>{{ 'Tedarikçi'|upper }}</th>
+                                <th>{{ 'Tur/Transfer'|upper }}</th>
+                                <th>{{ 'Araç Türü'|upper }}</th>
+                                <th>{{ 'Para Birimi'|upper }}</th>
+                            {% elif model_name == 'activitycost' %}
+                                <th>{{ 'Aktivite'|upper }}</th>
+                                <th>{{ 'Tedarikçi'|upper }}</th>
+                                <th>{{ 'Ücret'|upper }}</th>
+                            {% elif model_name == 'buyercompany' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Kısa Adı'|upper }}</th>
+                                <th>{{ 'İletişim'|upper }}</th>
+                            {% elif model_name == 'personel' %}
+                                <th>{{ 'Adı'|upper }}</th>
+                                <th>{{ 'Görevi'|upper }}</th>
+                                <th>{{ 'Telefon'|upper }}</th>
+                            {% else %}
+                                <th>{{ 'Adı'|upper }}</th>
+                            {% endif %}
+                            <th class="text-end">{{ 'İşlemler'|upper }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for object in objects %}
+                            <tr>
+                                {% if model_name == 'sirket' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.get_statu_display|upper }}</td>
+                                    <td data-sort="{{ object.start|date:'Y-m-d' }}">{{ object.start|date:"d.m.Y" }}</td>
+                                    <td data-sort="{{ object.finish|date:'Y-m-d' }}">{{ object.finish|date:"d.m.Y" }}</td>
+                                    <td>
+                                        {% if object.is_active %}
+                                            <span class="badge bg-success">{{ 'Aktif'|upper }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">{{ 'Pasif'|upper }}</span>
+                                        {% endif %}
+                                    </td>
+                                {% elif model_name == 'tour' or model_name == 'transfer' %}
+                                    <td>{{ object.route|upper }}</td>
+                                    <td>{{ object.start_city|upper }}</td>
+                                    <td>{{ object.finish_city|upper }}</td>
+                                {% elif model_name == 'vehicle' %}
+                                    <td>{{ object.vehicle|upper }}</td>
+                                    <td>{{ object.capacity }}</td>
+                                {% elif model_name == 'guide' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.city|upper }}</td>
+                                    <td>{{ object.phone|upper }}</td>
+                                    <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                                {% elif model_name == 'hotel' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.city|upper }}</td>
+                                    <td data-sort="{{ object.one_person }}">{{ object.one_person }} {{ object.currency|upper }}</td>
+                                    <td data-sort="{{ object.two_person }}">{{ object.two_person }} {{ object.currency|upper }}</td>
+                                    <td data-sort="{{ object.tree_person }}">{{ object.tree_person }} {{ object.currency|upper }}</td>
+                                {% elif model_name == 'activity' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.city|upper }}</td>
+                                {% elif model_name == 'museum' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.city|upper }}</td>
+                                    <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                                {% elif model_name == 'supplier' or model_name == 'activitysupplier' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.contact|upper }}</td>
+                                {% elif model_name == 'cost' %}
+                                    <td>{{ object.supplier|upper }}</td>
+                                    <td>{{ object.tour|default:object.transfer|upper }}</td>
+                                    <td>
+                                        {% if object.car %}{{ 'Binek'|upper }}: {{ object.car }} {{ object.currency|upper }}<br>{% endif %}
+                                        {% if object.minivan %}{{ 'Minivan'|upper }}: {{ object.minivan }} {{ object.currency|upper }}<br>{% endif %}
+                                        {% if object.minibus %}{{ 'Minibüs'|upper }}: {{ object.minibus }} {{ object.currency|upper }}<br>{% endif %}
+                                        {% if object.midibus %}{{ 'Midibüs'|upper }}: {{ object.midibus }} {{ object.currency|upper }}<br>{% endif %}
+                                        {% if object.bus %}{{ 'Otobüs'|upper }}: {{ object.bus }} {{ object.currency|upper }}{% endif %}
+                                    </td>
+                                    <td>{{ object.currency|upper }}</td>
+                                {% elif model_name == 'activitycost' %}
+                                    <td>{{ object.activity|upper }}</td>
+                                    <td>{{ object.supplier|upper }}</td>
+                                    <td data-sort="{{ object.price }}">{{ object.price }} {{ object.currency|upper }}</td>
+                                {% elif model_name == 'buyercompany' %}
+                                    <td>{{ object.name|upper }}</td>
+                                    <td>{{ object.short_name|upper }}</td>
+                                    <td>{{ object.contact|upper }}</td>
+                                {% elif model_name == 'personel' %}
+                                    <td>{{ object.user.get_full_name|upper }}</td>
+                                    <td>{{ object.get_job_display|upper }}</td>
+                                    <td>{{ object.phone|upper }}</td>
+                                {% else %}
+                                    <td>{{ object|upper }}</td>
+                                {% endif %}
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{% url 'tour:'|add:model_name|lower|add:'_update' pk=object.id %}" class="btn btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{% url 'tour:'|add:model_name|lower|add:'_delete' pk=object.id %}" class="btn btn-danger" onclick="return confirm('{{ 'Bu kaydı silmek istediğinize emin misiniz?'|upper }}');">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                {% if query %}
+                    <i class="bi bi-info-circle me-2"></i>"{{ query }}" ile ilgili kayıt bulunamadı.
+                {% else %}
+                    <i class="bi bi-info-circle me-2"></i>Henüz kayıtlı {{ model_verbose_name }} bulunmamaktadır.
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+// Performans için optimize edilmiş listeleme fonksiyonları
+document.addEventListener('DOMContentLoaded', function() {
+    const dataTable = document.getElementById('dataTable');
+    const searchInput = document.getElementById('tableSearchInput');
+    
+    if (!dataTable) return;
+    
+    // Table için sıralama mantığı
+    let state = {
+        sortColumn: 0,
+        sortDirection: 'asc'
+    };
+    
+    // DOM elementlerine referansları ön belleğe al
+    const tableBody = dataTable.querySelector('tbody');
+    const tableRows = Array.from(tableBody.querySelectorAll('tr'));
+    const tableHeaders = Array.from(dataTable.querySelectorAll('th'));
+    
+    // DOM'u minimum sayıda manipüle eden yüksek performanslı sıralama
+    function sortTableFast(columnIndex) {
+        if (columnIndex === tableHeaders.length - 1) return; // İşlemler sütununu sıralama
+        
+        // Sıralama yönünü belirle
+        if (state.sortColumn === columnIndex) {
+            state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            state.sortDirection = 'asc';
+            state.sortColumn = columnIndex;
+        }
+        
+        // Başlık stillerini güncelle
+        tableHeaders.forEach(header => header.classList.remove('asc', 'desc'));
+        tableHeaders[columnIndex].classList.add(state.sortDirection);
+        
+        // Sıralama fonksiyonu - daha verimli implementasyon
+        const direction = state.sortDirection === 'asc' ? 1 : -1;
+        
+        // Sıralanmış satırları elde et
+        const sortedRows = tableRows.slice().sort((rowA, rowB) => {
+            const cellA = rowA.cells[columnIndex];
+            const cellB = rowB.cells[columnIndex];
+            
+            if (!cellA || !cellB) return 0;
+            
+            // data-sort özniteliğini kullan (varsa)
+            let valueA = cellA.getAttribute('data-sort') || cellA.textContent.trim().toLowerCase();
+            let valueB = cellB.getAttribute('data-sort') || cellB.textContent.trim().toLowerCase();
+            
+            // Sayı olup olmadığını kontrol et
+            if (!isNaN(valueA) && !isNaN(valueB)) {
+                return direction * (parseFloat(valueA) - parseFloat(valueB));
+            }
+            
+            // Metin karşılaştırması
+            return direction * valueA.localeCompare(valueB, 'tr');
+        });
+        
+        // Fragment kullanarak DOM manipülasyonlarını azalt
+        const fragment = document.createDocumentFragment();
+        sortedRows.forEach(row => fragment.appendChild(row));
+        
+        // Tek bir DOM manipülasyonu ile güncellenmiş satırları ekle
+        tableBody.innerHTML = '';
+        tableBody.appendChild(fragment);
+    }
+    
+    // Tablo satırlarını filtreleme (arama)
+    function filterTable() {
+        const filter = searchInput.value.toLowerCase();
+        
+        tableRows.forEach(row => {
+            const cells = row.cells;
+            let found = false;
+            
+            // Tüm hücrelerde ara (-1 ile son hücreyi hariç tut - işlemler sütunu)
+            for (let i = 0; i < cells.length - 1; i++) {
+                if (cells[i].textContent.toLowerCase().includes(filter)) {
+                    found = true;
+                    break;
+                }
+            }
+            
+            // Display özelliğini tek seferde ayarla
+            row.style.display = found ? '' : 'none';
+        });
+    }
+    
+    // Event listenerleri daha verimli bir şekilde ekle
+    if (searchInput) {
+        // Input olayı için debounce uygula
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(filterTable, 200); // 200ms sonra filtrele
+        });
+    }
+    
+    // Sıralama butonlarına tıklama olaylarını ekle
+    tableHeaders.forEach((header, index) => {
+        if (index < tableHeaders.length - 1) { // son sütunu (işlemler) hariç tut
+            header.addEventListener('click', () => sortTableFast(index));
+        }
+    });
+    
+    // Sayfa yüklendiğinde varsayılan sıralamayı uygula
+    sortTableFast(0);
+});
+</script>
+{% endblock %}
