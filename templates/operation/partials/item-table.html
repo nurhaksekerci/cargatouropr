@@ -20,14 +20,31 @@
             </tr>
         </tbody>
     {% endif %}
+    {% if item.files.all %}
+        <thead class="thead-light">
+            <tr>
+                <th colspan="28">Dosyalar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                {% for file in item.files.all %}
+                    <td colspan="5"><a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-primary">{{forloop.counter}} {{ file.file_type }}</a></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    {% endif %}
     <thead class="thead-light">
         <tr>
             <th colspan="28">Tur Açıklaması</th>
             <th colspan="2" class="text-center d-flex gap-2">
-                <button type="button" hx-get="{% url 'tour:operationitem_edit' item.id %}" hx-target="#item-{{ item.id }}" hx-swap="outerHTML" class="btn btn-sm btn-primary">
+                <button type="button" hx-get="{% url 'tour:operationitemfile_create' item.id %}" hx-target="#item-{{ item.id }}" hx-swap="outerHTML" class="btn btn-sm btn-primary" title="Dosya Ekle">
+                    <i class="bi bi-file-earmark-plus"></i>
+                </button>
+                <button type="button" hx-get="{% url 'tour:operationitem_edit' item.id %}" hx-target="#item-{{ item.id }}" hx-swap="outerHTML" class="btn btn-sm btn-primary" title="Düzenle">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-danger">
+                <button type="button" class="btn btn-sm btn-danger" title="Sil">
                     <i class="bi bi-trash"></i>
                 </button>
             </th>

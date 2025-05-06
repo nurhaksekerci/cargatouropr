@@ -25,6 +25,10 @@ urlpatterns = [
     # Operasyon İtem silme
     path('operasyon-item-sil/<int:pk>/', views.operationitem_delete, name='operationitem_delete'),
 
+    # Operasyon Dosyası ekleme
+    path('operasyon-dosyasi-ekle/<int:pk>/', views.operationfile_create, name='operationfile_create'),
+    path('operasyon-item-dosyasi-ekle/<int:pk>/', views.operationitemfile_create, name='operationitemfile_create'),
+
     # İş Listesi
     path('is-listem/', views.my_job_list, name='my_job_list'),
     path('is-listesi/', views.job_list, name='job_list'),

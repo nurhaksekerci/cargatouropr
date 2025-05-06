@@ -12,7 +12,7 @@ from .models import (
     Cost, Activitycost, Buyercompany, Personel, UserActivityLog
 )
 from .forms import (
-    OperationForm, OperationItemForm, SirketForm, TourForm, TransferForm, VehicleForm, GuideForm, HotelForm,
+    OperationFileForm, OperationForm, OperationItemForm, SirketForm, TourForm, TransferForm, VehicleForm, GuideForm, HotelForm,
     ActivityForm, MuseumForm, SupplierForm, ActivitysupplierForm,
     CostForm, ActivitycostForm, BuyercompanyForm, PersonelForm,
 
@@ -1585,6 +1585,38 @@ def my_job_list(request):
         context['search_date'] = search_date
     
     return render(request, 'job/list.html', context)
+
+
+def operationitemfile_create(request, pk):
+    operation_item = get_object_or_404(Operationitem, pk=pk)
+    if request.method == 'POST':
+        form = OperationFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = form.save(commit=False)
+            file.operation = operation_item.day.operation
+            file.operation_item = operation_item
+            file.save()
+            return render(request, 'operation/partials/item-table.html', {'item': operation_item})
+    else:
+        form = OperationFileForm()
+    return render(request, 'operation/operationitemfile_form.html', {'form': form, 'item': operation_item})
+
+
+
+def operationfile_create(request, pk):
+    operation = get_object_or_404(Operation, pk=pk)
+    if request.method == 'POST':
+        form = OperationFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = form.save(commit=False)
+            file.operation = operation
+            file.save()
+            return render(request, 'operation/partials/operation-card.html', {'operation': operation})
+    else:
+        form = OperationFileForm()
+    return render(request, 'operation/operationfile_form.html', {'form': form, 'operation': operation})
+
+
 
 
 

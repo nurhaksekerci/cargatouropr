@@ -280,3 +280,6 @@ class CariAdmin(admin.ModelAdmin):
             'fields': ('receipt', 'created_staff', 'is_delete')
         }),
     )
+
+
+admin.site.register(OperationFile)

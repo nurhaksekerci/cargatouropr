@@ -329,18 +329,53 @@
           </div>
         </div>
       </div>
+
+      {% if operation.files.all %}
+        <hr class="my-4 border-primary">
+        <div class="col-12">
+          <div class="card h-100 border-0 shadow-sm hover-effect">
+            <div class="card-header bg-white border-0 pt-3">
+              <h6 class="d-flex align-items-center">
+                <span class="bg-primary bg-opacity-10 p-2 rounded-circle me-2">
+                  <i class="fas fa-file-alt text-primary"></i>
+                </span>
+                <span class="text-uppercase fw-bold small">Dosyalar</span>
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                {% for file in operation.files.all %}
+                  {% if not file.operation_item %}
+                    <div class="col-12">
+                      <div class="p-3 bg-light rounded text-center text-muted border border-light">
+                        <a href="{{ file.file.url }}" target="_blank" class="btn btn-sm btn-primary">{{ forloop.counter }} {{ file.file_type }}</a>
+                      </div>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+      
     </div>
   </div>
   
   <!-- Kart Altı - İşlem Butonları -->
   <div class="card-footer bg-white mt-auto border-0 pt-3 pb-4 position-relative z-1">
     <div class="row g-3">
-      <div class="col-6">
+      <div class="col-4">
+        <button type="button" hx-get="{% url 'tour:operationfile_create' operation.id %}" hx-target="#operation-{{ operation.id }}" hx-swap="outerHTML" class="btn btn-success btn-lg w-100 d-flex align-items-center justify-content-center shadow-sm" style="background-image: linear-gradient(to right,rgb(40, 181, 141),rgb(3, 69, 44)); border: none;">
+          <i class="fas fa-file-alt me-2"></i>Dosya Ekle
+        </button>
+      </div>
+      <div class="col-4">
         <button type="button" hx-get="{% url 'tour:operation_edit' operation.id %}" hx-target="#operation-{{ operation.id }}" hx-swap="outerHTML" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center shadow-sm" style="background-image: linear-gradient(to right, #4169E1, #0056b3); border: none;">
           <i class="fas fa-edit me-2"></i>Düzenle
         </button>
       </div>
-      <div class="col-6">
+      <div class="col-4">
         <button type="button" hx-get="{% url 'tour:operation_delete' operation.id %}" hx-target="#operation-{{ operation.id }}" hx-swap="outerHTML" class="btn btn-outline-danger btn-lg w-100 d-flex align-items-center justify-content-center">
           <i class="fas fa-trash-alt me-2"></i>Sil
         </button>

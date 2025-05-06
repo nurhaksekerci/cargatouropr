@@ -584,6 +584,35 @@ class Operationitem(models.Model):
         day_str = self.day or "Day not set"
         operation_type_str = self.operation_type or "Operation Type not set"
         return f"{day_str} - {operation_type_str}"
+    
+class OperationFile(models.Model):
+    FILE_TYPE_CHOICES = (
+        ('Çince Operasyon', 'Çince Operasyon'),
+        ('Aktivite Belgeleri', 'Aktivite Belgeleri'),
+        ('Rehber Belgeleri', 'Rehber Belgeleri'),
+        ('Araç Görselleri', 'Araç Görselleri'),
+        ('Araç Temizlik', 'Araç Temizlik'),
+        ('Otopark', 'Otopark'),
+        ('Yemek Fişi', 'Yemek Fişi'),
+        ('Otel Dekont', 'Otel Dekont'),
+        ('Müze Dekont', 'Müze Dekont'),
+        ('Konfirme Mektubu', 'Konfirme Mektubu'),
+        ('Diğer Belgeler', 'Diğer Belgeler'),
+    )
+
+    file_type = models.CharField(max_length=255, verbose_name="Dosya Tipi", choices=FILE_TYPE_CHOICES)
+    operation = models.ForeignKey(Operation, verbose_name="Operasyon", on_delete=models.CASCADE, related_name="files")
+    operation_item = models.ForeignKey(Operationitem, verbose_name="Operasyon Öğesi", on_delete=models.CASCADE, related_name="files", blank=True, null=True)
+    file = models.FileField(upload_to='operation_files/', verbose_name="Dosya")
+    is_delete = models.BooleanField(verbose_name="Silindi mi?", default=False, db_index=True)
+
+    class Meta:
+        verbose_name = "Operasyon Dosyası"
+        verbose_name_plural = "Operasyon Dosyaları"
+
+    def __str__(self):
+        return f"{self.file_type} - {self.operation.ticket}"
+
 
 class SupportTicket(models.Model):
     STATUS_CHOICES = (

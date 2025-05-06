@@ -1,7 +1,7 @@
 from django import forms
 from django.utils.text import slugify
 from .models import (
-    Sirket, Tour, Transfer, Vehicle, Guide, Hotel, 
+    OperationFile, Sirket, Tour, Transfer, Vehicle, Guide, Hotel, 
     Activity, Museum, Supplier, Activitysupplier, 
     Cost, Activitycost, Buyercompany, Personel, Operation,
     Operationitem, Operationday
@@ -367,5 +367,16 @@ class OperationItemForm(forms.ModelForm):
             'museum_payment': forms.Select(attrs={'class': 'form-control'}),
             'museum_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
         }
+
+
+class OperationFileForm(forms.ModelForm):
+    class Meta:
+        model = OperationFile
+        fields = ['file_type', 'file']
+        widgets = {
+            'file_type': forms.Select(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
 
 
