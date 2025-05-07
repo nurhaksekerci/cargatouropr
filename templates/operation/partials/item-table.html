@@ -16,7 +16,26 @@
                 <td colspan="7">{{ item.day.operation.follow_staff|default:"----" }}</td>
                 <td colspan="7">{{ item.day.operation.selling_staff|default:"----" }}</td>
                 <td colspan="7">{{ item.day.date|date:"d.m.Y" }}</td>
-                <td colspan="2"><a class="btn btn-sm btn-primary" href="{% url 'tour:operation_detail' item.day.operation.id %}"><i class="bi bi-eye"></i></a></td>
+                <td colspan="2">
+                    <a class="btn btn-sm btn-primary me-2" href="{% url 'tour:operation_detail' item.day.operation.id %}"><i class="bi bi-eye"></i></a>
+                    <a class="btn btn-sm btn-primary" target="_blank" href="https://wa.me/{% if request.user.username == 'ASLI' or request.user.username == 'nurhak' %}905304874388{% else %}905533836533{% endif %}?text=
+Grup%20Kodu:%20{{ item.day.operation.ticket }}%0A
+Tarih:%20{{ item.day.date|date:'d.m.Y' }}{% if item.operation_type %}%0A
+İşlem%20Turu:%20{{ item.operation_type }}{% endif %}{% if item.day.operation.passenger_info %}%0A
+Yolcu%20Bilgileri:%20{{ item.day.operation.passenger_info }}{% endif %}{% if item.description %}%0A
+Açıklama:%20{{ item.description }}{% endif %}{% if item.tour %}%0A
+Tur:%20{{ item.tour }}{% endif %}{% if item.transfer %}%0A
+Transfer:%20{{ item.transfer }}{% endif %}{% if item.pick_time %}%0A
+Alış%20Saati:%20{{ item.pick_time|time:'H:i' }}{% endif %}{% if item.release_location %}%0A
+Bırakma%20Yeri:%20{{ item.release_location }}{% endif %}{% if item.pick_location %}%0A
+Alış%20Yeri:%20{{ item.pick_location }}{% endif %}{% if item.vehicle %}%0A
+Araç:%20{{ item.vehicle }}{% endif %}{% if item.hotel %}%0A
+Otel:%20{{ item.hotel }}{% endif %}{% with museums=item.new_museum.all %}{% if museums.exists %}%0A
+Müzeler:%20{% for museum in museums %}{{ forloop.counter }})%20{{ museum.name }}{% if not forloop.last %},%20{% endif %}{% endfor %}{% endif %}{% endwith %}{% if item.guide %}%0A
+Rehber:%20{{ item.guide }}{% endif %}">
+        <i class="bi bi-whatsapp"></i>
+    </a>
+                </td>
             </tr>
         </tbody>
     {% endif %}
@@ -86,7 +105,7 @@
     </thead>
     <tbody>
         {% comment %} Transfer tipi için zorunlu alanları kontrol et {% endcomment %}
-        
+
         <tr>
             <td>{{ item.get_operation_type_display }}</td>
             {% comment %} Alış Saati: Birçok işlem türü için zorunlu {% endcomment %}
