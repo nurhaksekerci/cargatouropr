@@ -4,7 +4,7 @@
   "pk": 1,
   "fields": {
     "password": "pbkdf2_sha256$600000$IV3p8Ev9VKoZzJvP8gvV4J$JPMLOnQLhHPhJGK9E17vyJuWfgPHUlNHgxvbaEQ/E+s=",
-    "last_login": "2025-05-05T20:54:13.176Z",
+    "last_login": "2025-05-07T08:21:30.537Z",
     "is_superuser": true,
     "username": "nurhak",
     "first_name": "Nurhak",
@@ -130,7 +130,7 @@
   "pk": 14,
   "fields": {
     "password": "pbkdf2_sha256$600000$5qSbC1dgCuUUJvtcq9Df5d$X7/C6Bjs3HcaKhUkRlKLG8FDTR8HTEDYEIWd3EU96Cw=",
-    "last_login": "2025-05-05T12:43:23.680Z",
+    "last_login": "2025-05-07T12:03:47.874Z",
     "is_superuser": false,
     "username": "HAMİ",
     "first_name": "Hami",
@@ -166,7 +166,7 @@
   "pk": 16,
   "fields": {
     "password": "pbkdf2_sha256$600000$QQSiw2LywqzizMC8uWEujF$lb6JR0KF27cpuHTRB+1p0TB+PhUlGNcjR+cr6QQgsSk=",
-    "last_login": "2025-05-05T08:39:57.648Z",
+    "last_login": "2025-05-07T13:58:45.873Z",
     "is_superuser": false,
     "username": "MUSA",
     "first_name": "Musa",
@@ -184,7 +184,7 @@
   "pk": 17,
   "fields": {
     "password": "pbkdf2_sha256$600000$h9yexOKD7RA9ZQNalwec41$EVKjkL0mb5FbQGkZOmGMJU2debffiPvuCr2T13L0+KI=",
-    "last_login": "2025-05-05T12:34:45.718Z",
+    "last_login": "2025-05-06T21:46:06.989Z",
     "is_superuser": false,
     "username": "NURBİYE",
     "first_name": "Nurbiye",
@@ -202,7 +202,7 @@
   "pk": 18,
   "fields": {
     "password": "pbkdf2_sha256$600000$Mv2hpK74wbeltwcdEx7HVP$BPeM23QbhtvuJTuUIfwC0SiabAtmPtwOIm0wc2r4SAU=",
-    "last_login": "2025-05-05T18:51:52.143Z",
+    "last_login": "2025-05-07T17:28:34.286Z",
     "is_superuser": false,
     "username": "KAMİ",
     "first_name": "Kami",
@@ -220,7 +220,7 @@
   "pk": 19,
   "fields": {
     "password": "pbkdf2_sha256$600000$ly21EioSVB7nEbjyYU42Ra$KKGKsvQoPhHFeHvMmt3MIkUbQFUiGl81VzkoadhsCz4=",
-    "last_login": "2025-05-05T14:55:08.355Z",
+    "last_login": "2025-05-07T10:55:16.114Z",
     "is_superuser": false,
     "username": "HASAN",
     "first_name": "Hasan",
@@ -328,7 +328,7 @@
   "pk": 26,
   "fields": {
     "password": "pbkdf2_sha256$600000$Us8tMON6lFpcYUhPj8EfYA$WSAPOov2PYH//wvFl5PJhcOmcnD1YQEYgn3H0QUuiMY=",
-    "last_login": "2025-05-05T20:00:41.648Z",
+    "last_login": "2025-05-07T09:23:56.968Z",
     "is_superuser": false,
     "username": "ASLI",
     "first_name": "ASLINUR",
@@ -400,7 +400,7 @@
   "pk": 33,
   "fields": {
     "password": "pbkdf2_sha256$600000$FjYPFJjMOMZ7diOHR1e9Fw$uLVIrr4eTRJOp1yyTHXuYg1bqCvNAXk1qMKC2rhNtSw=",
-    "last_login": "2025-03-26T07:58:09.717Z",
+    "last_login": "2025-05-07T13:26:33.643Z",
     "is_superuser": false,
     "username": "CATHY",
     "first_name": "CATHY",
@@ -472,7 +472,7 @@
   "pk": 37,
   "fields": {
     "password": "pbkdf2_sha256$600000$R6XKb5tOjW3JwxBRDk7wL3$jpDE1WzdacLG19z6B232DZ+tBzD7o7w9JpA48VQANf0=",
-    "last_login": "2025-05-05T09:14:18.808Z",
+    "last_login": "2025-05-07T13:07:47.740Z",
     "is_superuser": false,
     "username": "MERT",
     "first_name": "MERTSEV",
@@ -499,6 +499,42 @@
     "is_staff": false,
     "is_active": true,
     "date_joined": "2025-04-16T08:39:38Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 39,
+  "fields": {
+    "password": "pbkdf2_sha256$600000$B6UDn0C9mKMAQLexcC2BrI$+yRmeYmxtE3iSNgyfq0QdxNBIi35/nRuMQ/dm4E85TY=",
+    "last_login": "2025-05-07T06:36:27.889Z",
+    "is_superuser": false,
+    "username": "zeynure",
+    "first_name": "Zeynure",
+    "last_name": "MNC",
+    "email": "zeynure@mncgroup.org",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-05-06T08:41:48Z",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "auth.user",
+  "pk": 40,
+  "fields": {
+    "password": "pbkdf2_sha256$600000$KZh7pFukWIoEdDFEXDEJEr$95TSBE/IPqEEkmVcjf8iS7Evb3KwoUrVGG6wVG3Fy7I=",
+    "last_login": "2025-05-07T11:51:54.483Z",
+    "is_superuser": false,
+    "username": "ferina",
+    "first_name": "Ferina",
+    "last_name": "FERHAT",
+    "email": "ferina@mncgroup.org",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2025-05-07T11:33:25Z",
     "groups": [],
     "user_permissions": []
   }

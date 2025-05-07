@@ -1,0 +1,497 @@
+[
+{
+  "model": "tour.activity",
+  "pk": 5,
+  "fields": {
+    "company": 1,
+    "name": "ATV",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 6,
+  "fields": {
+    "company": 1,
+    "name": "BALON",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 7,
+  "fields": {
+    "company": 1,
+    "name": "PARAŞÜT",
+    "city": "Fethiye",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 8,
+  "fields": {
+    "company": 1,
+    "name": "KLASİK ARABA",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 9,
+  "fields": {
+    "company": 1,
+    "name": "AT",
+    "city": "Fethiye",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 10,
+  "fields": {
+    "company": 1,
+    "name": "JEEP",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 11,
+  "fields": {
+    "company": 1,
+    "name": "AT",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 12,
+  "fields": {
+    "company": 1,
+    "name": "DEVE",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 13,
+  "fields": {
+    "company": 1,
+    "name": "TÜRK GECESİ",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 14,
+  "fields": {
+    "company": 1,
+    "name": "BLACK PEARL TEKNE",
+    "city": "FETHİYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 15,
+  "fields": {
+    "company": 1,
+    "name": "BALON",
+    "city": "PAMUKKALE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 16,
+  "fields": {
+    "company": 1,
+    "name": "MIX TUR",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 18,
+  "fields": {
+    "company": 1,
+    "name": "GREEN TUR",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 19,
+  "fields": {
+    "company": 1,
+    "name": "TEKNE",
+    "city": "ANTALYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 20,
+  "fields": {
+    "company": 1,
+    "name": "TEKNE",
+    "city": "KAŞ",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 21,
+  "fields": {
+    "company": 1,
+    "name": "TURK GECESI TEKNE",
+    "city": "ISTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 22,
+  "fields": {
+    "company": 1,
+    "name": "ELIS HAMAM",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 23,
+  "fields": {
+    "company": 1,
+    "name": "RED TUR",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 24,
+  "fields": {
+    "company": 1,
+    "name": "GÜN BATIMI KLASAİK ARABA ÇEKİMİ",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 25,
+  "fields": {
+    "company": 1,
+    "name": "TEKNE ÖZEL",
+    "city": "ISTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 26,
+  "fields": {
+    "company": 1,
+    "name": "SİM KART",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 27,
+  "fields": {
+    "company": 1,
+    "name": "HELİKOPTER",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 28,
+  "fields": {
+    "company": 1,
+    "name": "FEHİYE SPEEDBOAT",
+    "city": "FETHİYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 29,
+  "fields": {
+    "company": 1,
+    "name": "İGA PASS",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 30,
+  "fields": {
+    "company": 1,
+    "name": "İGA PASS",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 31,
+  "fields": {
+    "company": 1,
+    "name": "FOTOĞRAF ÇEKİMİ",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 32,
+  "fields": {
+    "company": 1,
+    "name": "SAW KARŞILAMA",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 33,
+  "fields": {
+    "company": 1,
+    "name": "UÇAK BİLETİ",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 34,
+  "fields": {
+    "company": 1,
+    "name": "MAJESTIC CAVE",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 35,
+  "fields": {
+    "company": 1,
+    "name": "DRAGON TEKNE",
+    "city": "FETHİYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 36,
+  "fields": {
+    "company": 1,
+    "name": "CAĞALOĞLU HAMAMI",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 37,
+  "fields": {
+    "company": 1,
+    "name": "VIKING TEKNE",
+    "city": "FETHİYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 38,
+  "fields": {
+    "company": 1,
+    "name": "DEEP BLUE",
+    "city": "FETHIYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 39,
+  "fields": {
+    "company": 1,
+    "name": "GECE BOĞAZ PEREME",
+    "city": "",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 40,
+  "fields": {
+    "company": 1,
+    "name": "SEMAZEN GÖSTERİ",
+    "city": "",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 41,
+  "fields": {
+    "company": 1,
+    "name": "YAT",
+    "city": "İSTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 42,
+  "fields": {
+    "company": 1,
+    "name": "Bosphorus Dinner Cruise Turkish Night Shows",
+    "city": "ISTANBUL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 43,
+  "fields": {
+    "company": 1,
+    "name": "DALIŞ",
+    "city": "FETHİYE",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 44,
+  "fields": {
+    "company": 1,
+    "name": "KAYAK",
+    "city": "KAYSERI",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 45,
+  "fields": {
+    "company": 1,
+    "name": "PASSOLIG",
+    "city": "ISTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 46,
+  "fields": {
+    "company": 1,
+    "name": "SPA MERKEZİ",
+    "city": "NEVŞEHİR",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 47,
+  "fields": {
+    "company": 1,
+    "name": "NAZAR BALON",
+    "city": "KAPADOKYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 48,
+  "fields": {
+    "company": 1,
+    "name": "TURK GECESI",
+    "city": "ISTANBUL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 49,
+  "fields": {
+    "company": 1,
+    "name": "ANTALYA TEKNE TURU",
+    "city": "ANTALYA",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activity",
+  "pk": 50,
+  "fields": {
+    "company": 1,
+    "name": "TURKCE MIX TUR KAPADOKYA",
+    "city": "NEVSEHIR",
+    "location": null,
+    "is_delete": false
+  }
+}
+]

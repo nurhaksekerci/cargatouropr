@@ -1195,11 +1195,54 @@ def operation_detail(request, pk):
 
 def operation_edit(request, pk):
     operation = get_object_or_404(Operation, pk=pk)
-    form = OperationForm(request.POST or None, instance=operation)
-    if request.method == 'POST' and form.is_valid():
-        form.save()
-        return render(request, 'operation/partials/operation-card.html', {'operation': operation})
-    return render(request, 'operation/edit.html', {'form': form, 'operation': operation})
+    staff = None
+    company = None
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        company = staff.company
+    if request.method == 'POST':
+        form = OperationForm(request.POST, instance=operation)
+        if form.is_valid():
+            form.save()
+            #Log kaydı oluştur
+            if staff:
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action=f"Operasyon gününde yeni öğe oluşturdu: {operation.ticket}",
+                )
+            elif request.user.is_superuser:
+                UserActivityLog.objects.create(
+                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturdu: {operation.ticket}",
+                )
+            return render(request, 'operation/partials/operation-card.html', {'operation': operation})
+        else:
+            print(form.errors)
+            #Log kaydı oluştur
+            if staff:
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action=f"Operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {operation.ticket}, Hata: {form.errors}",
+                )
+            elif request.user.is_superuser:
+                UserActivityLog.objects.create(
+                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {operation.ticket}, Hata: {form.errors}",
+                )
+    else:
+        form = OperationForm(instance=operation)
+        #Log kaydı oluştur
+        if staff:
+            UserActivityLog.objects.create(
+                company=company,
+                staff=staff,
+                action=f"Operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {operation.ticket}",
+            )
+        elif request.user.is_superuser:
+            UserActivityLog.objects.create(
+                action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {operation.ticket}",
+            )
+        return render(request, 'operation/edit.html', {'form': form, 'operation': operation})
 
 
 def operationitem_edit(request, pk):
@@ -1222,7 +1265,18 @@ def operationitem_delete(request, pk):
 
 def operationday_item_create(request, day_id):
     day = get_object_or_404(Operationday, id=day_id)
+    staff = None
+    company = None
     
+    if hasattr(request.user, 'personel') and request.user.personel.exists():
+        staff = request.user.personel.first()
+        company = staff.company
+
+        #Log kaydı oluştur
+
+    if request.user.is_superuser:
+        company = Sirket.objects.get(id=1)
+
     if request.method == 'POST':
         form = OperationItemForm(request.POST)
         if form.is_valid():
@@ -1230,12 +1284,52 @@ def operationday_item_create(request, day_id):
             item.day = day
             item.company = day.company
             item.save()
+            form.save_m2m()  # ManyToMany ilişkilerini kaydet
+
+            # Log kaydı oluştur
+            if staff:
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action=f"Operasyon gününde yeni öğe oluşturdu: {item.operation_type}",
+                    ip_address=get_client_ip(request),
+                    browser_info=request.META.get('HTTP_USER_AGENT', '')
+                )
+            elif request.user.is_superuser:
+                UserActivityLog.objects.create(
+                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturdu: {item.operation_type}",
+                    ip_address=get_client_ip(request),
+                    browser_info=request.META.get('HTTP_USER_AGENT', '')
+                )
+            
             return render(request, 'operation/partials/item-table.html', {'item': item})
         else:
             print(form.errors)
+            #Log kaydı oluştur
+            if staff:
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action=f"Operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {item.operation_type}, {day.date}, {item.id}, Hata: {form.errors}",
+                )
+            elif request.user.is_superuser:
+                UserActivityLog.objects.create(
+                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {item.operation_type}, {day.date}, {item.id}, Hata: {form.errors}",
+                )
     else:
         form = OperationItemForm()
-        
+        #Log kaydı oluştur
+        if staff:
+            UserActivityLog.objects.create(
+                company=company,
+                staff=staff,
+                action=f"Operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {item.operation_type} {day.date} {item.id}",
+            )
+        elif request.user.is_superuser:
+            UserActivityLog.objects.create(
+                action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {item.operation_type} {day.date} {item.id}",
+            )
+
     return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
 
 def operation_list(request):

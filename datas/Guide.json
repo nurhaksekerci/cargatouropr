@@ -1,0 +1,3130 @@
+[
+{
+  "model": "tour.guide",
+  "pk": 3,
+  "fields": {
+    "company": 1,
+    "name": "SEVİL ERSAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "2811",
+    "phone": "5445656000",
+    "mail": null,
+    "price": "120.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 4,
+  "fields": {
+    "company": 1,
+    "name": "SEMİH",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "5474",
+    "phone": "5392031888",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 5,
+  "fields": {
+    "company": 1,
+    "name": "PINAR",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "2744",
+    "phone": "5452410228",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 6,
+  "fields": {
+    "company": 1,
+    "name": "MAHİNUR",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5336948885",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 7,
+  "fields": {
+    "company": 1,
+    "name": "Ramazan",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5397819310",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 8,
+  "fields": {
+    "company": 1,
+    "name": "NURŞAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5382340129",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 9,
+  "fields": {
+    "company": 1,
+    "name": "ABDULHEKİM TERZİOĞLU",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5345274140",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 10,
+  "fields": {
+    "company": 1,
+    "name": "SU",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5352097387",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 11,
+  "fields": {
+    "company": 1,
+    "name": "HAFIZ BEY",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "2068",
+    "phone": "5327345413",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 12,
+  "fields": {
+    "company": 1,
+    "name": "HALİL BEY",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "05323575511",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 13,
+  "fields": {
+    "company": 1,
+    "name": "CANSU",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5533745202",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 14,
+  "fields": {
+    "company": 1,
+    "name": "ERSİN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5336355660",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 15,
+  "fields": {
+    "company": 1,
+    "name": "ABDURRAHMAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5432757784",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 16,
+  "fields": {
+    "company": 1,
+    "name": "FATMA",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5071786993",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 17,
+  "fields": {
+    "company": 1,
+    "name": "LUTFU",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5325225707",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 18,
+  "fields": {
+    "company": 1,
+    "name": "MELİKE TAŞKIRAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5524096051",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 19,
+  "fields": {
+    "company": 1,
+    "name": "LEVENT",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5355801629",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 20,
+  "fields": {
+    "company": 1,
+    "name": "SEZEN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5436228466",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 21,
+  "fields": {
+    "company": 1,
+    "name": "DUYGU",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5324767833",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 22,
+  "fields": {
+    "company": 1,
+    "name": "RAMAZAN AKDOLAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5542913400",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 23,
+  "fields": {
+    "company": 1,
+    "name": "KAZIM SAGUN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5438155154",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 24,
+  "fields": {
+    "company": 1,
+    "name": "ALİ YİĞİT",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5323064015",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 25,
+  "fields": {
+    "company": 1,
+    "name": "BAHAR ERTAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5443352052",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 26,
+  "fields": {
+    "company": 1,
+    "name": "SEMRA KAYA",
+    "city": "ANTALYA",
+    "new_city": "Antalya",
+    "doc_no": null,
+    "phone": "5312615081",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 27,
+  "fields": {
+    "company": 1,
+    "name": "OĞUZHAN KAYA",
+    "city": "ANTALYA",
+    "new_city": "Antalya",
+    "doc_no": null,
+    "phone": "5314034384",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 28,
+  "fields": {
+    "company": 1,
+    "name": "CEM",
+    "city": "ANTALYA",
+    "new_city": "Antalya",
+    "doc_no": null,
+    "phone": "5545381789",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 29,
+  "fields": {
+    "company": 1,
+    "name": "NEŞE",
+    "city": "ANKARA",
+    "new_city": "Ankara",
+    "doc_no": null,
+    "phone": "5326625713",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 30,
+  "fields": {
+    "company": 1,
+    "name": "CAN ÖZKAN",
+    "city": "ANKARA",
+    "new_city": "Ankara",
+    "doc_no": null,
+    "phone": "5316853131",
+    "mail": null,
+    "price": "120.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 31,
+  "fields": {
+    "company": 1,
+    "name": "İLTEBİR",
+    "city": "İSTANBUL TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5530270168",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 32,
+  "fields": {
+    "company": 1,
+    "name": "HAKAN",
+    "city": "İSTANBUL TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5541579999",
+    "mail": null,
+    "price": "100.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 33,
+  "fields": {
+    "company": 1,
+    "name": "ALİ",
+    "city": "İSTANBUL TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5354773504",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 34,
+  "fields": {
+    "company": 1,
+    "name": "SULTAN",
+    "city": "İSTANBUL TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5523403669",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 35,
+  "fields": {
+    "company": 1,
+    "name": "NURZAT",
+    "city": "İSTANBUL TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5525116054",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 36,
+  "fields": {
+    "company": 1,
+    "name": "ŞEHİDE",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5537953887",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 37,
+  "fields": {
+    "company": 1,
+    "name": "EKREM",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5538553833",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 38,
+  "fields": {
+    "company": 1,
+    "name": "SADDAM İDRİS",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5532043888",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 39,
+  "fields": {
+    "company": 1,
+    "name": "VELİ",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5318608196",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 40,
+  "fields": {
+    "company": 1,
+    "name": "GÖHER",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5394393008",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 41,
+  "fields": {
+    "company": 1,
+    "name": "NADİRE",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5398326566",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 42,
+  "fields": {
+    "company": 1,
+    "name": "HİCRAN ATALAY",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": "13624",
+    "phone": "5303940688",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 43,
+  "fields": {
+    "company": 1,
+    "name": "ALI SUAVI EEDEMEM",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "535 388 1557",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 44,
+  "fields": {
+    "company": 1,
+    "name": "ADIL BEY",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5319926888",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 45,
+  "fields": {
+    "company": 1,
+    "name": "MERYEM ÇÖLOĞLU",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "5807",
+    "phone": "5388795370",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 46,
+  "fields": {
+    "company": 1,
+    "name": "NURBİYE CAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5531470082",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 47,
+  "fields": {
+    "company": 1,
+    "name": "NURIMAN KAYA",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "5635",
+    "phone": "5325531588",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 48,
+  "fields": {
+    "company": 1,
+    "name": "BURAK ÖZ",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "598",
+    "phone": "5532202231",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 49,
+  "fields": {
+    "company": 1,
+    "name": "AHMET KAYA",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "3809",
+    "phone": "5376308971",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 50,
+  "fields": {
+    "company": 1,
+    "name": "BURHAN GÜNEY",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5065605969",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 51,
+  "fields": {
+    "company": 1,
+    "name": "DURSUN ABI",
+    "city": "İST TERCÜMAN ARAÇLI",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5392922199",
+    "mail": null,
+    "price": "100.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 52,
+  "fields": {
+    "company": 1,
+    "name": "HANA ABDÜRRAŞİDHAN",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "6106",
+    "phone": "5374106300",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 53,
+  "fields": {
+    "company": 1,
+    "name": "FERAT REHBER",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5324012496",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 54,
+  "fields": {
+    "company": 1,
+    "name": "MUSTAFA SIRKINTI",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5334568494",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 55,
+  "fields": {
+    "company": 1,
+    "name": "ÇEÇE (kami)",
+    "city": "İSTANBUL TERCÜMAN",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5346837553",
+    "mail": null,
+    "price": "70.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 56,
+  "fields": {
+    "company": 1,
+    "name": "GÜLGİNE UYGUR",
+    "city": "istanbul",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5302661189",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 57,
+  "fields": {
+    "company": 1,
+    "name": "NECATI GANI",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5315171499",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 58,
+  "fields": {
+    "company": 1,
+    "name": "BEYAZİT",
+    "city": "İZMİR",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5423417581",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 59,
+  "fields": {
+    "company": 1,
+    "name": "IKLİMA GANİ",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5394792899",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 60,
+  "fields": {
+    "company": 1,
+    "name": "DERVİŞ SÜER",
+    "city": "İZMİR",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5434738777",
+    "mail": null,
+    "price": "1750.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 61,
+  "fields": {
+    "company": 1,
+    "name": "AHMET MIŞRAKLI",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "3508",
+    "phone": "5397332918",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 62,
+  "fields": {
+    "company": 1,
+    "name": "MUSTAFA BUDAKÇI",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "979",
+    "phone": "5325172368",
+    "mail": null,
+    "price": "3100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 63,
+  "fields": {
+    "company": 1,
+    "name": "FERHAT PÜR",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "169",
+    "phone": "5362671973",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 64,
+  "fields": {
+    "company": 1,
+    "name": "HANA ABDÜRRAŞİDHAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5374106300",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 67,
+  "fields": {
+    "company": 1,
+    "name": "OĞUZHAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "50787602231",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 68,
+  "fields": {
+    "company": 1,
+    "name": "UĞUR ÜNAL",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5427954263",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 69,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN GULİ",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "0531 583 44 07",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 70,
+  "fields": {
+    "company": 1,
+    "name": "KUDDUSİ AZİZOĞLU",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "0536 690 09 88",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 71,
+  "fields": {
+    "company": 1,
+    "name": "OSMAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5456126816",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 72,
+  "fields": {
+    "company": 1,
+    "name": "ÖZGE",
+    "city": "KUŞADASI",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5547432780",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 73,
+  "fields": {
+    "company": 1,
+    "name": "FERDON",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5370338730",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 74,
+  "fields": {
+    "company": 1,
+    "name": "HAFİZ",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "532 7345 413",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 75,
+  "fields": {
+    "company": 1,
+    "name": "TUĞŞAT BAŞ",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": "012750",
+    "phone": "5333468107",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 76,
+  "fields": {
+    "company": 1,
+    "name": "ERDI",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "05062515746",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 77,
+  "fields": {
+    "company": 1,
+    "name": "AYDIN AKTAY",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5326003375",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 78,
+  "fields": {
+    "company": 1,
+    "name": "CELALEDDIN",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "5180",
+    "phone": "5393917675",
+    "mail": null,
+    "price": "100.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 79,
+  "fields": {
+    "company": 1,
+    "name": "BAHAR",
+    "city": "İZMİR",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5324860608",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 80,
+  "fields": {
+    "company": 1,
+    "name": "KUMRU SAĞLAM İŞBİLEN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5322415804",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 81,
+  "fields": {
+    "company": 1,
+    "name": "KERİM",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": "1",
+    "phone": "5349654522",
+    "mail": null,
+    "price": "120.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 82,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN  ILSAT MUTLU",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5305811888",
+    "mail": null,
+    "price": "100.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 84,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN ARAFAT",
+    "city": "ANKARA",
+    "new_city": "Ankara",
+    "doc_no": null,
+    "phone": "5522094214",
+    "mail": null,
+    "price": "1.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 85,
+  "fields": {
+    "company": 1,
+    "name": "TERCUMAN SEYIDE",
+    "city": "ANKARA",
+    "new_city": "Ankara",
+    "doc_no": null,
+    "phone": "(544) 140-4195",
+    "mail": null,
+    "price": "1.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 86,
+  "fields": {
+    "company": 1,
+    "name": "GAYE",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(539) 330-0557",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 87,
+  "fields": {
+    "company": 1,
+    "name": "TÜLİN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(530) 880-3988",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 88,
+  "fields": {
+    "company": 1,
+    "name": "SERDAR TERCÜMAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5393077753",
+    "mail": null,
+    "price": "100.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 89,
+  "fields": {
+    "company": 1,
+    "name": "ALİM",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "000",
+    "phone": "(000",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 90,
+  "fields": {
+    "company": 1,
+    "name": "NURAMINA",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(507) 873-9619",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 91,
+  "fields": {
+    "company": 1,
+    "name": "MEDİNE ÇİNCE TERCÜMAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(531) 934-3203",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 92,
+  "fields": {
+    "company": 1,
+    "name": "ZEKİYE TERCÜMAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(552) 319-2199",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 93,
+  "fields": {
+    "company": 1,
+    "name": "NEZAKET TERCÜMAN",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(543) 731-8502",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 94,
+  "fields": {
+    "company": 1,
+    "name": "MİRADİL",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(537) 608-1085",
+    "mail": null,
+    "price": "1.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 95,
+  "fields": {
+    "company": 1,
+    "name": "MUHTAR",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(535) 890-0770",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 96,
+  "fields": {
+    "company": 1,
+    "name": "İLKNUR GÖKÇE",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "013724",
+    "phone": "(535) 517-4385",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 97,
+  "fields": {
+    "company": 1,
+    "name": "ALİ CAN BUĞRAOĞLU",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "013056",
+    "phone": "(534) 218-8133",
+    "mail": "alibugraoglu@gmail.com",
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 98,
+  "fields": {
+    "company": 1,
+    "name": "AYDIN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(538) 030-6236",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 99,
+  "fields": {
+    "company": 1,
+    "name": "ASLI CAN DUMAN",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(535) 555-1638",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 100,
+  "fields": {
+    "company": 1,
+    "name": "ADIL ADIL",
+    "city": "ISTANBUL/ANADOLU",
+    "new_city": "İstanbul (Anadolu)",
+    "doc_no": "5541",
+    "phone": "(531) 992-6888",
+    "mail": "888adiladil@gmail.com",
+    "price": "120.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 101,
+  "fields": {
+    "company": 1,
+    "name": "ŞEYMA ÇAKIR",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "6119",
+    "phone": "(538) 315-6461",
+    "mail": null,
+    "price": "120.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 102,
+  "fields": {
+    "company": 1,
+    "name": "ARZU",
+    "city": "KAPADOKYA",
+    "new_city": null,
+    "doc_no": null,
+    "phone": "(1",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 103,
+  "fields": {
+    "company": 1,
+    "name": "DUYGU",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": "1",
+    "phone": "(544) 447-6452",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 104,
+  "fields": {
+    "company": 1,
+    "name": "medine",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(530) 966-6889",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 105,
+  "fields": {
+    "company": 1,
+    "name": "ALI ADURAHIM",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "5624",
+    "phone": "(538) 591-2776",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 106,
+  "fields": {
+    "company": 1,
+    "name": "test",
+    "city": "test",
+    "new_city": null,
+    "doc_no": "222",
+    "phone": "(505) 447-1953",
+    "mail": "nurhaksekerci12@gmail.com",
+    "price": "1.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 107,
+  "fields": {
+    "company": 1,
+    "name": "SANIYA SALAY",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "0000",
+    "phone": "(542) 515-4487",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 108,
+  "fields": {
+    "company": 1,
+    "name": "ALİ ABDURAHİM",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "0000",
+    "phone": "5385912776",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 109,
+  "fields": {
+    "company": 1,
+    "name": "MAHMUT ÖZSOY",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "0000",
+    "phone": "5459230605",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 110,
+  "fields": {
+    "company": 1,
+    "name": "YARKIN TESLİMA",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "0000",
+    "phone": "(535) 788-8602",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 111,
+  "fields": {
+    "company": 1,
+    "name": "FIRATCAN FİRİK",
+    "city": "ANTALYA-KUŞADASI",
+    "new_city": "Antalya",
+    "doc_no": "0000",
+    "phone": "5076189968",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 112,
+  "fields": {
+    "company": 1,
+    "name": "emre süllü",
+    "city": "PAMUKKALE",
+    "new_city": "Denizli",
+    "doc_no": "0000",
+    "phone": "(554) 433-3373",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 113,
+  "fields": {
+    "company": 1,
+    "name": "YARKIN",
+    "city": "KUSADASI",
+    "new_city": "İzmir",
+    "doc_no": "0000",
+    "phone": "(554) 257-0838",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 114,
+  "fields": {
+    "company": 1,
+    "name": "AMINE AYDIN",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "3409",
+    "phone": "(532) 677-6110",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 115,
+  "fields": {
+    "company": 1,
+    "name": "SEMİH KUŞADASI",
+    "city": "KUŞADASI",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(545) 303-5264",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 116,
+  "fields": {
+    "company": 1,
+    "name": "hamit",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "0000",
+    "phone": "(538) 949-4666",
+    "mail": null,
+    "price": "100.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 117,
+  "fields": {
+    "company": 1,
+    "name": "YASIN IDIKUT",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "1510",
+    "phone": "(532) 696-3126",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 118,
+  "fields": {
+    "company": 1,
+    "name": "NUR SADIK",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(536) 970-3926",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 119,
+  "fields": {
+    "company": 1,
+    "name": "DILNUR TERCÜMAN",
+    "city": "ISTANBUL",
+    "new_city": null,
+    "doc_no": null,
+    "phone": "(536) 970-3926",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 120,
+  "fields": {
+    "company": 1,
+    "name": "EMEL",
+    "city": "ISTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": "06-1062",
+    "phone": "(544) 359-8019",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 126,
+  "fields": {
+    "company": 1,
+    "name": "CHIUNG LING",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5316336586",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 127,
+  "fields": {
+    "company": 1,
+    "name": "DEMET",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "5452545016",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 128,
+  "fields": {
+    "company": 1,
+    "name": "İBRAHİM",
+    "city": "KUŞADASI",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(537) 787-2554",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 129,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN AHMET",
+    "city": "KAPADOKYA",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(553) 914-1111",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 130,
+  "fields": {
+    "company": 1,
+    "name": "KAYSER",
+    "city": "İSTANBUL",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(545) 678-0808",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 131,
+  "fields": {
+    "company": 1,
+    "name": "CANDAN MNC",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "(530) 482-4888",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 132,
+  "fields": {
+    "company": 1,
+    "name": "FULYA YILDIRIM",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": "5001",
+    "phone": "(538) 956-1116",
+    "mail": null,
+    "price": "150.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 133,
+  "fields": {
+    "company": 1,
+    "name": "EDA",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(531) 319-2065",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 134,
+  "fields": {
+    "company": 1,
+    "name": "EDA ATASKAYA",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(531) 319-2065",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 135,
+  "fields": {
+    "company": 1,
+    "name": "BERK KARABAŞ",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": "004472",
+    "phone": "533 482 48 63",
+    "mail": null,
+    "price": "130.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 136,
+  "fields": {
+    "company": 1,
+    "name": "TERCUMAN - XAMSINUR",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "(535) 565-8581",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 137,
+  "fields": {
+    "company": 1,
+    "name": "MERYEM FEYZULLAH - TERCÜMAN",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "(538) 610-3138",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 138,
+  "fields": {
+    "company": 1,
+    "name": "ALFİ",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(537) 644-5933",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 139,
+  "fields": {
+    "company": 1,
+    "name": "ALFİRE AHMET",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(537) 644-5933",
+    "mail": null,
+    "price": "3411.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 140,
+  "fields": {
+    "company": 1,
+    "name": "GULGINE TERCUMAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": "0",
+    "phone": "535 022 50 59",
+    "mail": null,
+    "price": "80.00",
+    "currency": "USD",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 141,
+  "fields": {
+    "company": 1,
+    "name": "MERVE İNGLİZCE",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "5555161205",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 142,
+  "fields": {
+    "company": 1,
+    "name": "MÜNEVVER ÇİNCE",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(532) 296-9657",
+    "mail": null,
+    "price": "150.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 143,
+  "fields": {
+    "company": 1,
+    "name": "CANDAN TERCUMAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": "000",
+    "phone": "05051027577",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 144,
+  "fields": {
+    "company": 1,
+    "name": "YAGMUR",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": "000",
+    "phone": "(534) 661-4907",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 145,
+  "fields": {
+    "company": 1,
+    "name": "ASUMAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(538) 878-9326",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 146,
+  "fields": {
+    "company": 1,
+    "name": "Ayşe İng",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "5343976097",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 147,
+  "fields": {
+    "company": 1,
+    "name": "ŞÜKÜR",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(538) 914-8765",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 148,
+  "fields": {
+    "company": 1,
+    "name": "DENİZ",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(553) 216-3910",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 149,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN MEDİNE",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(552) 484-7746",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 150,
+  "fields": {
+    "company": 1,
+    "name": "SULEYMAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(546) 250-8595",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 151,
+  "fields": {
+    "company": 1,
+    "name": "ESMA",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(537) 357-4849",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 152,
+  "fields": {
+    "company": 1,
+    "name": "NEJAT KURBAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(507) 647-2588",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 153,
+  "fields": {
+    "company": 1,
+    "name": "SEYMA TERCÜMAN-KAPADOKYA",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(531) 736-1475",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 154,
+  "fields": {
+    "company": 1,
+    "name": "GURAY TOSUN",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(533) 671-9165",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 155,
+  "fields": {
+    "company": 1,
+    "name": "ZİLAN",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(543) 961-1778",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 156,
+  "fields": {
+    "company": 1,
+    "name": "OZAN",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(539) 797-5004",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 157,
+  "fields": {
+    "company": 1,
+    "name": "LÜTFİYE ŞAHİN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": "10095",
+    "phone": "‪+90 543 340 25 03‬",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 158,
+  "fields": {
+    "company": 1,
+    "name": "TERCÜMAN FARUK",
+    "city": "",
+    "new_city": "Antalya",
+    "doc_no": null,
+    "phone": "5339456588",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 159,
+  "fields": {
+    "company": 1,
+    "name": "WUMAIER XIAREPATI",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(534) 885-1591",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 160,
+  "fields": {
+    "company": 1,
+    "name": "MURAT TEOMAN ÇİNCE",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "5541887895",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 161,
+  "fields": {
+    "company": 1,
+    "name": "RENA",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(531) 320-3998",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 162,
+  "fields": {
+    "company": 1,
+    "name": "MUYESSER TERCÜMAN",
+    "city": "",
+    "new_city": "Antalya",
+    "doc_no": null,
+    "phone": "5366036982",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 163,
+  "fields": {
+    "company": 1,
+    "name": "LÜTFİYE YARKENT",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(552) 572-7593",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 164,
+  "fields": {
+    "company": 1,
+    "name": "VELİ ABDULHEMİT",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(531) 860-8196",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 165,
+  "fields": {
+    "company": 1,
+    "name": "SELİM İNGİLİZCE KAPADOKYA",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(534) 065-9478",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 166,
+  "fields": {
+    "company": 1,
+    "name": "EDA ZEİCAN ÖZALTUN",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(542) 794-9414",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 167,
+  "fields": {
+    "company": 1,
+    "name": "MEHMET FARUK",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5354018162",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 168,
+  "fields": {
+    "company": 1,
+    "name": "İKRAM İSTANBUL ÇİNCE ŞOFÖR",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "(553) 855-3833",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 169,
+  "fields": {
+    "company": 1,
+    "name": "ARMAN İST ÇİNCE",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(534) 013-2750",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 170,
+  "fields": {
+    "company": 1,
+    "name": "SELCAN KIZILKAYA ÇİNCE",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(537) 794-4277",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 171,
+  "fields": {
+    "company": 1,
+    "name": "MERİÇ İST REHBER",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(053) 846-883",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 172,
+  "fields": {
+    "company": 1,
+    "name": "NAMIK KAP REHBER",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(507) 363-5263",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 173,
+  "fields": {
+    "company": 1,
+    "name": "MEHTAP",
+    "city": "",
+    "new_city": "Denizli",
+    "doc_no": null,
+    "phone": "(551) 707-1850",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 174,
+  "fields": {
+    "company": 1,
+    "name": "Mustafa Olgun",
+    "city": "",
+    "new_city": "Muğla",
+    "doc_no": null,
+    "phone": "(905) 357-3457",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 175,
+  "fields": {
+    "company": 1,
+    "name": "ISTANBUL TERCUMAN ARACLI ALI ASLAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(553) 737-0809",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 176,
+  "fields": {
+    "company": 1,
+    "name": "DOĞUKAN",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "+90 546 581 95 76",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 177,
+  "fields": {
+    "company": 1,
+    "name": "ŞERİFE-TERCÜMAN",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(053) 488-5159",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 178,
+  "fields": {
+    "company": 1,
+    "name": "DAVUT ÖZSARAÇ - İZMİR REHBER",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "(905) 378-2418",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 179,
+  "fields": {
+    "company": 1,
+    "name": "DAVUT ÖZSARAÇ - İZMİR REHBER",
+    "city": "",
+    "new_city": "İzmir",
+    "doc_no": null,
+    "phone": "5378241872",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 180,
+  "fields": {
+    "company": 1,
+    "name": "GÜLNAR-TERCÜMAN",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": "000",
+    "phone": "(536) 370-5996",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 181,
+  "fields": {
+    "company": 1,
+    "name": "FURKAN-TERCÜMAN",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "(050) 505-2099",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 182,
+  "fields": {
+    "company": 1,
+    "name": "Dilber Tercüman",
+    "city": "",
+    "new_city": null,
+    "doc_no": null,
+    "phone": "(535) 106-8494",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 183,
+  "fields": {
+    "company": 1,
+    "name": "EKBER TARAN",
+    "city": "",
+    "new_city": null,
+    "doc_no": null,
+    "phone": "(537) 919-7979",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 184,
+  "fields": {
+    "company": 1,
+    "name": "FUNDA NUR",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(539) 407-6976",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 185,
+  "fields": {
+    "company": 1,
+    "name": "ESRA REHBER BURSA",
+    "city": "",
+    "new_city": "Bursa",
+    "doc_no": null,
+    "phone": "(535) 377-6910",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 186,
+  "fields": {
+    "company": 1,
+    "name": "GUL PAMUKKALE",
+    "city": "",
+    "new_city": "Denizli",
+    "doc_no": null,
+    "phone": "(537) 747-7681",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 187,
+  "fields": {
+    "company": 1,
+    "name": "RENA TERCÜMAN",
+    "city": "",
+    "new_city": null,
+    "doc_no": null,
+    "phone": "(531) 320-3998",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 188,
+  "fields": {
+    "company": 1,
+    "name": "MEVLAN-IST TERCÜMAN",
+    "city": "",
+    "new_city": "İstanbul (Avrupa)",
+    "doc_no": null,
+    "phone": "5538888068",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 189,
+  "fields": {
+    "company": 1,
+    "name": "ÖZKAN LAFCI",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(530) 722-1418",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 190,
+  "fields": {
+    "company": 1,
+    "name": "SUDE",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": "013666",
+    "phone": "(551) 844-5610",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 191,
+  "fields": {
+    "company": 1,
+    "name": "SERPIL HOCA KAPADOKYA INGILIZCE",
+    "city": "",
+    "new_city": "Nevşehir",
+    "doc_no": null,
+    "phone": "(530) 143-8665",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 192,
+  "fields": {
+    "company": 1,
+    "name": "ELİF ÖRÜÇ",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": null,
+    "phone": "(541) 965-3498",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 193,
+  "fields": {
+    "company": 1,
+    "name": "GOKHAN DEMIR (TRABZON)",
+    "city": "",
+    "new_city": "Trabzon",
+    "doc_no": "005238",
+    "phone": "(546) 760-8088",
+    "mail": "gokhan01demir@gmail.com",
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.guide",
+  "pk": 194,
+  "fields": {
+    "company": 1,
+    "name": "ELIF ORUC INGILIZCE REHBER (ISTANBUL)",
+    "city": "",
+    "new_city": "İstanbul",
+    "doc_no": "012348",
+    "phone": "5419653498",
+    "mail": null,
+    "price": "0.00",
+    "currency": "TL",
+    "location": null,
+    "is_delete": false
+  }
+}
+]

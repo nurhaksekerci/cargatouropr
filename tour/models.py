@@ -595,8 +595,11 @@ class OperationFile(models.Model):
         ('Otopark', 'Otopark'),
         ('Yemek Fişi', 'Yemek Fişi'),
         ('Otel Dekont', 'Otel Dekont'),
-        ('Müze Dekont', 'Müze Dekont'),
-        ('Konfirme Mektubu', 'Konfirme Mektubu'),
+        ('Uçuş Biletleri', 'Uçuş Biletleri'),
+        ('Balon Dekontları', 'Balon Dekontları'),
+        ('Tekne Biletleri', 'Tekne Biletleri'),
+        ('Müze Biletleri', 'Müze Biletleri'),
+        ('Otel Konfirme Mektubu', 'Otel Konfirme Mektubu'),
         ('Diğer Belgeler', 'Diğer Belgeler'),
     )
 

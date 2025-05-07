@@ -332,11 +332,11 @@ class OperationItemForm(forms.ModelForm):
         fields = [
             'operation_type', 'pick_time',
             'pick_location', 'release_location', 'tour', 'transfer', 
-            'vehicle', 'supplier', 'driver', 'driver_phone', 'plaka',
-            'hotel', 'room_type', 'hotel_payment', 'hotel_price',
-            'activity', 'activity_supplier', 'activity_payment', 'activity_price',
-            'new_museum', 'museum_person', 'museum_payment', 'museum_price',
-            'guide', 'guide_price', 'guide_var', 'description',
+            'vehicle', 'supplier', 'manuel_vehicle_price', 'driver', 'driver_phone', 'plaka', 
+            'hotel', 'room_type', 'hotel_payment', 'hotel_price', 'hotel_currency',
+            'activity', 'activity_supplier', 'activity_payment', 'manuel_activity_price', 'activity_currency',
+            'new_museum', 'museum_person', 'museum_payment', 'museum_price', 'museum_currency',
+            'guide', 'guide_price', 'guide_currency', 'guide_var', 'description',
         ]
         widgets = {
             'operation_type': forms.Select(attrs={'class': 'form-control'}),
@@ -347,6 +347,7 @@ class OperationItemForm(forms.ModelForm):
             'transfer': forms.Select(attrs={'class': 'form-control'}),
             'vehicle': forms.Select(attrs={'class': 'form-control'}),
             'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'manuel_vehicle_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'driver': forms.TextInput(attrs={'class': 'form-control'}),
             'driver_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'plaka': forms.TextInput(attrs={'class': 'form-control'}),
@@ -354,18 +355,20 @@ class OperationItemForm(forms.ModelForm):
             'room_type': forms.TextInput(attrs={'class': 'form-control'}),
             'hotel_payment': forms.Select(attrs={'class': 'form-control'}),
             'hotel_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'hotel_currency': forms.Select(attrs={'class': 'form-control'}),
             'activity': forms.Select(attrs={'class': 'form-control'}),
             'activity_supplier': forms.Select(attrs={'class': 'form-control'}),
             'activity_payment': forms.Select(attrs={'class': 'form-control'}),
-            'activity_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'manuel_activity_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'guide': forms.Select(attrs={'class': 'form-control'}),
             'guide_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'guide_var': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': '2'}),
-            'new_museum': forms.Select(attrs={'class': 'form-control', 'multiple': True}),
+            'new_museum': forms.SelectMultiple(attrs={'class': 'form-control', 'multiple': 'multiple'}),
             'museum_person': forms.NumberInput(attrs={'class': 'form-control'}),
             'museum_payment': forms.Select(attrs={'class': 'form-control'}),
-            'museum_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+            'museum_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'museum_currency': forms.Select(attrs={'class': 'form-control'}),
         }
 
 

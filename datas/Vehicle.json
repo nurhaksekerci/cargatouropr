@@ -1,0 +1,52 @@
+[
+{
+  "model": "tour.vehicle",
+  "pk": 38,
+  "fields": {
+    "company": 1,
+    "vehicle": "BINEK",
+    "capacity": 4,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.vehicle",
+  "pk": 39,
+  "fields": {
+    "company": 1,
+    "vehicle": "MINIVAN",
+    "capacity": 9,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.vehicle",
+  "pk": 40,
+  "fields": {
+    "company": 1,
+    "vehicle": "MINIBUS",
+    "capacity": 15,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.vehicle",
+  "pk": 41,
+  "fields": {
+    "company": 1,
+    "vehicle": "MIDIBUS",
+    "capacity": 25,
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.vehicle",
+  "pk": 42,
+  "fields": {
+    "company": 1,
+    "vehicle": "OTOBUS",
+    "capacity": 45,
+    "is_delete": false
+  }
+}
+]

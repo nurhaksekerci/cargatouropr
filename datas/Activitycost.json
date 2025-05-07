@@ -1,0 +1,170 @@
+[
+{
+  "model": "tour.activitycost",
+  "pk": 1,
+  "fields": {
+    "company": 1,
+    "supplier": 2,
+    "activity": 5,
+    "price": "650.00",
+    "currency": "TL",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 2,
+  "fields": {
+    "company": 1,
+    "supplier": null,
+    "activity": null,
+    "price": null,
+    "currency": "TL",
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 3,
+  "fields": {
+    "company": 1,
+    "supplier": 22,
+    "activity": 7,
+    "price": "110.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 4,
+  "fields": {
+    "company": 1,
+    "supplier": 8,
+    "activity": 10,
+    "price": "60.00",
+    "currency": "USD",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 5,
+  "fields": {
+    "company": 1,
+    "supplier": 51,
+    "activity": 8,
+    "price": "75.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 6,
+  "fields": {
+    "company": 1,
+    "supplier": 29,
+    "activity": 8,
+    "price": "70.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 7,
+  "fields": {
+    "company": 1,
+    "supplier": null,
+    "activity": null,
+    "price": null,
+    "currency": "TL",
+    "is_delete": true
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 8,
+  "fields": {
+    "company": 1,
+    "supplier": 55,
+    "activity": 29,
+    "price": "196.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 9,
+  "fields": {
+    "company": 1,
+    "supplier": null,
+    "activity": null,
+    "price": null,
+    "currency": "TL",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 10,
+  "fields": {
+    "company": 1,
+    "supplier": 59,
+    "activity": 32,
+    "price": "109.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 11,
+  "fields": {
+    "company": 1,
+    "supplier": 69,
+    "activity": 37,
+    "price": "1250.00",
+    "currency": "TL",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 12,
+  "fields": {
+    "company": 1,
+    "supplier": null,
+    "activity": null,
+    "price": null,
+    "currency": "TL",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 13,
+  "fields": {
+    "company": 1,
+    "supplier": null,
+    "activity": null,
+    "price": null,
+    "currency": "TL",
+    "is_delete": false
+  }
+},
+{
+  "model": "tour.activitycost",
+  "pk": 14,
+  "fields": {
+    "company": 1,
+    "supplier": 71,
+    "activity": 21,
+    "price": "26.00",
+    "currency": "EUR",
+    "is_delete": false
+  }
+}
+]
