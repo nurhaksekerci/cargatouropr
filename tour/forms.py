@@ -286,7 +286,16 @@ class OperationForm(forms.ModelForm):
         }
     
     def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
+        
+        if company:
+            self.fields['follow_staff'].queryset = Personel.objects.filter(company=company, is_active=True)
+            self.fields['buyer_company'].queryset = Buyercompany.objects.filter(company=company, is_delete=False)
+        else:
+            self.fields['follow_staff'].queryset = Personel.objects.filter(is_active=True)
+            self.fields['buyer_company'].queryset = Buyercompany.objects.filter(is_delete=False)
+        
         # Tarih alanları için mevcut değerleri uygun formatta ayarla
         if self.instance and self.instance.pk:
             # Eğer bir instance varsa ve veritabanından geliyorsa (pk != None)
@@ -370,6 +379,31 @@ class OperationItemForm(forms.ModelForm):
             'museum_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'museum_currency': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        company = kwargs.pop('company', None)
+        super().__init__(*args, **kwargs)
+        
+        if company:
+            self.fields['new_museum'].queryset = Museum.objects.filter(company=company, is_delete=False)
+            self.fields['vehicle'].queryset = Vehicle.objects.filter(company=company, is_delete=False)
+            self.fields['supplier'].queryset = Supplier.objects.filter(company=company, is_delete=False)
+            self.fields['hotel'].queryset = Hotel.objects.filter(company=company, is_delete=False)
+            self.fields['activity'].queryset = Activity.objects.filter(company=company, is_delete=False)
+            self.fields['activity_supplier'].queryset = Activitysupplier.objects.filter(company=company, is_delete=False)
+            self.fields['guide'].queryset = Guide.objects.filter(company=company, is_delete=False)
+            self.fields['transfer'].queryset = Transfer.objects.filter(company=company, is_delete=False)
+            self.fields['tour'].queryset = Tour.objects.filter(company=company, is_delete=False)
+        else:
+            self.fields['new_museum'].queryset = Museum.objects.filter(is_delete=False)
+            self.fields['vehicle'].queryset = Vehicle.objects.filter(is_delete=False)
+            self.fields['supplier'].queryset = Supplier.objects.filter(is_delete=False)
+            self.fields['hotel'].queryset = Hotel.objects.filter(is_delete=False)
+            self.fields['activity'].queryset = Activity.objects.filter(is_delete=False)
+            self.fields['activity_supplier'].queryset = Activitysupplier.objects.filter(is_delete=False)
+            self.fields['guide'].queryset = Guide.objects.filter(is_delete=False)
+            self.fields['transfer'].queryset = Transfer.objects.filter(is_delete=False)
+            self.fields['tour'].queryset = Tour.objects.filter(is_delete=False)
 
 
 class OperationFileForm(forms.ModelForm):

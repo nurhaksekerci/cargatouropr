@@ -391,6 +391,12 @@ class Operation(models.Model):
     PAYMENT_CHANNEL_CHOICES = (
         ('Havale', 'Havale'),
         ('Xctrip', 'Xctrip'),
+        ('Usdt', 'Usdt'),
+        ('Kredi kartı', 'Kredi kartı'),
+        ('Musa Weixin pay', 'Musa Weixin pay'),
+        ('Nur weixin pay', 'Nur weixin pay'),
+        ('Nur Alipay', 'Nur Alipay'),
+        ('Musa Alipay', 'Musa Alipay'),
     )
     SOLD_CHOICES = (
         ('Istendi', 'Istendi'),
@@ -584,7 +590,7 @@ class Operationitem(models.Model):
         day_str = self.day or "Day not set"
         operation_type_str = self.operation_type or "Operation Type not set"
         return f"{day_str} - {operation_type_str}"
-    
+
 class OperationFile(models.Model):
     FILE_TYPE_CHOICES = (
         ('Çince Operasyon', 'Çince Operasyon'),
@@ -688,7 +694,7 @@ class NotificationReceipt(models.Model):
 
 class ExchangeRate(models.Model):
     usd_to_try = models.FloatField(verbose_name='USD/TRY')
-    usd_to_eur = models.FloatField(verbose_name='USD/EUR') 
+    usd_to_eur = models.FloatField(verbose_name='USD/EUR')
     usd_to_rmb = models.FloatField(verbose_name='USD/RMB')
     created_at = models.DateTimeField(default=timezone.now, db_index=True)
 

@@ -3,6 +3,7 @@
 {% block title %}KONTROL PANELİ{% endblock %}
 
 {% block content %}
+
 <div class="row mb-4">
     <div class="col-md-12">
         <div class="card">
@@ -18,7 +19,7 @@
                         <p class="mb-1"><strong>E-POSTA:</strong> {{ user.email|upper }}</p>
                         {% if company %}
                             <p class="mb-1"><strong>ŞİRKET:</strong> {{ company.name|upper }}</p>
-                            <p><strong>DURUM:</strong> 
+                            <p class="mb-1"><strong>DURUM:</strong> 
                                 {% if company.is_active %}
                                     <span class="badge bg-success">AKTİF</span>
                                 {% else %}
@@ -31,6 +32,14 @@
                     </div>
                     <div class="col-md-6 text-md-end">
                         <p class="mb-1"><strong>SON GİRİŞ:</strong> {% now "d.m.Y H:i" %}</p>
+                        <p class="mb-1"><strong>SON AKTİVİTE:</strong> {{ user.last_login|date:"d.m.Y H:i" }}</p>
+                        <p class="mb-1"><strong>KULLANICI TİPİ:</strong> 
+                            {% if user.is_superuser %}
+                                <span class="badge bg-danger">SÜPER KULLANICI</span>
+                            {% else %}
+                                <span class="badge bg-info">PERSONEL</span>
+                            {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -38,16 +47,169 @@
     </div>
 </div>
 
-<div class="row">
+
+<!-- Hızlı Erişim Menüsü -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="bi bi-lightning-charge me-2"></i>HIZLI ERİŞİM</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'tour:operation_create' %}" class="btn btn-primary w-100">
+                            <i class="bi bi-plus-circle me-2"></i>YENİ OPERASYON
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'tour:job_list' %}" class="btn btn-success w-100">
+                            <i class="bi bi-calendar-check me-2"></i>GÜNLÜK İŞ LİSTESİ
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'tour:my_job_list' %}" class="btn btn-info w-100">
+                            <i class="bi bi-person-check me-2"></i>KİŞİSEL İŞ LİSTESİ
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="{% url 'tour:my_activity_logs' %}" class="btn btn-warning w-100">
+                            <i class="bi bi-clock-history me-2"></i>AKTİVİTE KAYITLARI
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Aktif Operasyonlar ve Bugünün İşleri -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-check me-2"></i>AKTİF OPERASYONLAR
+                    <span class="badge bg-light text-dark ms-2">{{ active_operations|length|default:0 }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if active_operations %}
+                    <div class="list-group">
+                        {% for operation in active_operations %}
+                            {% if operation.follow_staff == request.user.personel.first %}
+                                <a href="{% url 'tour:operation_detail' operation.id %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ operation.ticket }}</h6>
+                                        <small>{{ operation.start|date:"d.m.Y" }} - {{ operation.finish|date:"d.m.Y" }}</small>
+                                    </div>
+                                    <p class="mb-1">{{ operation.buyer_company.name }}</p>
+                                    <small>Takip Eden: {{ operation.follow_staff.get_full_name }}</small>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aktif operasyon bulunmuyor.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check me-2"></i>BUGÜNÜN İŞLERİ
+                    <span class="badge bg-light text-dark ms-2">{{ today_jobs|length|default:0 }}</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if today_jobs %}
+                    <div class="list-group">
+                        {% for job in today_jobs %}
+                            {% if job.day.operation.follow_staff == request.user.personel.first %}
+                                <a href="{% url 'tour:my_job_list' %}#item-{{ job.id }}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ job.operation_type }}</h6>
+                                        <small>{{ job.pick_time|time:"H:i" }}</small>
+                                    </div>
+                                    <p class="mb-1">
+                                        {% if job.tour %}{{ job.tour.name }}{% endif %}
+                                        {% if job.transfer %}{{ job.transfer.name }}{% endif %}
+                                        {% if job.vehicle %}{{ job.vehicle.name }}{% endif %}
+                                        {% if job.hotel %}{{ job.hotel.name }}{% endif %}
+                                        {% if job.activity %}{{ job.activity.name }}{% endif %}
+                                    </p>
+                                    <small>Operasyon: {{ job.day.operation.ticket }}</small>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Bugün için iş bulunmuyor.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Son Aktiviteler -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>SON AKTİVİTELER</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_logs %}
+                    <div class="list-group">
+                        {% for log in recent_logs %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ log.action }}</h6>
+                                    <small>{{ log.timestamp|date:"d.m.Y H:i" }}</small>
+                                </div>
+                                {% if log.staff %}
+                                    <small>Personel: {{ log.staff.get_full_name }}</small>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center">Aktivite kaydı bulunmuyor.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- İstatistik Kartları -->
+<div class="row my-4">
+    <div class="col-md-12">
+        <h4 class="mb-3"><i class="bi bi-graph-up me-2"></i>GENEL İSTATİSTİKLER</h4>
+    </div>
+    
     <div class="col-md-3 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
                 <i class="bi bi-signpost-2 text-primary" style="font-size: 3rem;"></i>
                 <h5 class="card-title mt-3">TURLAR</h5>
-                <h2 class="mb-0">{{ tours_count }}</h2>
-                <p class="text-muted">KAYITLI TUR</p>
-                <p class="text-danger">SİLİNMİŞ TUR: {{ deleted_tours_count }}</p>
-                <a href="{% url 'tour:tour_list' %}" class="btn btn-outline-primary">GÖRÜNTÜLE</a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ tours_count }}</h2>
+                        <p class="text-muted">AKTİF TUR</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_tours_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:tour_list' %}" class="btn btn-outline-primary me-2">AKTİF</a>
+                    <a href="{% url 'tour:tour_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
@@ -57,10 +219,20 @@
             <div class="card-body text-center">
                 <i class="bi bi-truck text-success" style="font-size: 3rem;"></i>
                 <h5 class="card-title mt-3">TRANSFERLER</h5>
-                <h2 class="mb-0">{{ transfers_count }}</h2>
-                <p class="text-muted">KAYITLI TRANSFER</p>
-                <p class="text-danger">SİLİNMİŞ TRANSFER: {{ deleted_transfers_count }}</p>
-                <a href="{% url 'tour:transfer_list' %}" class="btn btn-outline-success">GÖRÜNTÜLE</a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ transfers_count }}</h2>
+                        <p class="text-muted">AKTİF TRANSFER</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_transfers_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:transfer_list' %}" class="btn btn-outline-success me-2">AKTİF</a>
+                    <a href="{% url 'tour:transfer_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
@@ -70,10 +242,20 @@
             <div class="card-body text-center">
                 <i class="bi bi-car-front text-danger" style="font-size: 3rem;"></i>
                 <h5 class="card-title mt-3">ARAÇLAR</h5>
-                <h2 class="mb-0">{{ vehicles_count }}</h2>
-                <p class="text-muted">KAYITLI ARAÇ</p>
-                <p class="text-danger">SİLİNMİŞ ARAÇ: {{ deleted_vehicles_count }}</p>
-                <a href="{% url 'tour:vehicle_list' %}" class="btn btn-outline-danger">GÖRÜNTÜLE</a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ vehicles_count }}</h2>
+                        <p class="text-muted">AKTİF ARAÇ</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_vehicles_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:vehicle_list' %}" class="btn btn-outline-danger me-2">AKTİF</a>
+                    <a href="{% url 'tour:vehicle_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
@@ -81,12 +263,48 @@
     <div class="col-md-3 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
-                <i class="bi bi-car-front text-danger" style="font-size: 3rem;"></i>
-                <h5 class="card-title mt-3">ARAÇ TEDARİKÇİLERİ</h5>
-                <h2 class="mb-0">{{ suppliers_count }}</h2>
-                <p class="text-muted">KAYITLI TEDARİKÇİ</p>
-                <p class="text-danger">SİLİNMİŞ TEDARİKÇİ: {{ deleted_suppliers_count }}</p>
-                <a href="{% url 'tour:supplier_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+                <i class="bi bi-people text-info" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">REHBERLER</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ guides_count }}</h2>
+                        <p class="text-muted">AKTİF REHBER</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_guides_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:guide_list' %}" class="btn btn-outline-info me-2">AKTİF</a>
+                    <a href="{% url 'tour:guide_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İkinci Satır İstatistikleri -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-building text-warning" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">OTELLER</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ hotels_count }}</h2>
+                        <p class="text-muted">AKTİF OTEL</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_hotels_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:hotel_list' %}" class="btn btn-outline-warning me-2">AKTİF</a>
+                    <a href="{% url 'tour:hotel_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
@@ -96,23 +314,20 @@
             <div class="card-body text-center">
                 <i class="bi bi-trophy text-secondary" style="font-size: 3rem;"></i>
                 <h5 class="card-title mt-3">AKTİVİTELER</h5>
-                <h2 class="mb-0">{{ activities_count }}</h2>
-                <p class="text-muted">KAYITLI AKTİVİTE</p>
-                <p class="text-danger">SİLİNMİŞ AKTİVİTE: {{ deleted_activities_count }}</p>
-                <a href="{% url 'tour:activity_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-trophy text-secondary" style="font-size: 3rem;"></i>
-                <h5 class="card-title mt-3">AKTİVİTE TEDARİKÇİLERİ</h5>
-                <h2 class="mb-0">{{ activitysuppliers_count }}</h2>
-                <p class="text-muted">KAYITLI AKTİVİTE TEDARİKÇİ</p>
-                <p class="text-danger">SİLİNMİŞ AKTİVİTE TEDARİKÇİ: {{ deleted_activitysuppliers_count }}</p>
-                <a href="{% url 'tour:activitysupplier_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ activities_count }}</h2>
+                        <p class="text-muted">AKTİF AKTİVİTE</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_activities_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:activity_list' %}" class="btn btn-outline-secondary me-2">AKTİF</a>
+                    <a href="{% url 'tour:activity_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
@@ -120,43 +335,47 @@
     <div class="col-md-3 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
-                <i class="bi bi-person-badge text-info" style="font-size: 3rem;"></i>
-                <h5 class="card-title mt-3">REHBERLER</h5>
-                <h2 class="mb-0">{{ guides_count }}</h2>
-                <p class="text-muted">KAYITLI REHBER</p>
-                <p class="text-danger">SİLİNMİŞ REHBER: {{ deleted_guides_count }}</p>
-                <a href="{% url 'tour:guide_list' %}" class="btn btn-outline-info">GÖRÜNTÜLE</a>
+                <i class="bi bi-shop text-success" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">TEDARİKÇİLER</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ suppliers_count }}</h2>
+                        <p class="text-muted">AKTİF TEDARİKÇİ</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_suppliers_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:supplier_list' %}" class="btn btn-outline-success me-2">AKTİF</a>
+                    <a href="{% url 'tour:supplier_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-4">
         <div class="card h-100">
             <div class="card-body text-center">
-                <i class="bi bi-house-fill text-warning" style="font-size: 3rem;"></i>
-                <h5 class="card-title mt-3">OTELLER</h5>
-                <h2 class="mb-0">{{ hotels_count }}</h2>
-                <p class="text-muted">KAYITLI OTEL</p>
-                <p class="text-danger">SİLİNMİŞ OTEL: {{ deleted_hotels_count }}</p>
-                <a href="{% url 'tour:hotel_list' %}" class="btn btn-outline-warning">GÖRÜNTÜLE</a>
-            </div>
-        </div>
-    </div>
-    
-    
-    
-    
-    <div class="col-md-3 mb-4">
-        <div class="card h-100">
-            <div class="card-body text-center">
-                <i class="bi bi-cash-coin text-secondary" style="font-size: 3rem;"></i>
-                <h5 class="card-title mt-3">ALICI FİRMA</h5>
-                <h2 class="mb-0">{{ buyercompanies_count }}</h2>
-                <p class="text-muted">KAYITLI ALICI FİRMA</p>
-                <p class="text-danger">SİLİNMİŞ ALICI FİRMA: {{ deleted_buyercompanies_count }}</p>
-                <a href="{% url 'tour:buyercompany_list' %}" class="btn btn-outline-secondary">GÖRÜNTÜLE</a>
+                <i class="bi bi-building-add text-primary" style="font-size: 3rem;"></i>
+                <h5 class="card-title mt-3">ALICI FİRMALAR</h5>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-0">{{ buyercompanies_count }}</h2>
+                        <p class="text-muted">AKTİF FİRMA</p>
+                    </div>
+                    <div>
+                        <h2 class="mb-0 text-danger">{{ deleted_buyercompanies_count }}</h2>
+                        <p class="text-danger">SİLİNMİŞ</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'tour:buyercompany_list' %}" class="btn btn-outline-primary me-2">AKTİF</a>
+                    <a href="{% url 'tour:buyercompany_deleted_list' %}" class="btn btn-outline-danger">SİLİNMİŞ</a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

@@ -1,21 +1,21 @@
 
-<table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem;">
+<table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem; border: 2px solid blue;">
     {% if job %}
         <thead class="thead-light">
             <tr>
-                <th colspan="7">Grup Kodu</th>
-                <th colspan="7">Takip Eden</th>
-                <th colspan="7">Oluşturan</th>
-                <th colspan="7">Tarih</th>
-                <th colspan="2">İşlem</th>
+                <th colspan="7" class="text-danger">Grup Kodu</th>
+                <th colspan="7" class="text-danger">Takip Eden</th>
+                <th colspan="7" class="text-danger">Oluşturan</th>
+                <th colspan="7" class="text-danger">Tarih</th>
+                <th colspan="2" class="text-danger">İşlem</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td colspan="7">{{ item.day.operation.ticket|default:"----" }}</td>
-                <td colspan="7">{{ item.day.operation.follow_staff|default:"----" }}</td>
-                <td colspan="7">{{ item.day.operation.selling_staff|default:"----" }}</td>
-                <td colspan="7">{{ item.day.date|date:"d.m.Y" }}</td>
+                <td colspan="7" class="text-danger">{{ item.day.operation.ticket|default:"----" }}</td>
+                <td colspan="7" class="text-danger">{{ item.day.operation.follow_staff|default:"----" }}</td>
+                <td colspan="7" class="text-danger">{{ item.day.operation.selling_staff|default:"----" }}</td>
+                <td colspan="7" class="text-danger">{{ item.day.date|date:"d.m.Y" }}</td>
                 <td colspan="2">
                     <a class="btn btn-sm btn-primary me-2" href="{% url 'tour:operation_detail' item.day.operation.id %}"><i class="bi bi-eye"></i></a>
                     <a class="btn btn-sm btn-primary" target="_blank" href="https://wa.me/{% if request.user.username == 'ASLI' or request.user.username == 'nurhak' %}905304874388{% else %}905533836533{% endif %}?text=
@@ -117,7 +117,7 @@ Rehber:%20{{ item.guide }}{% endif %}">
             <td colspan="2" {% if not item.pick_location and item.operation_type == 'Transfer' or not item.pick_location and item.operation_type == 'Tur' or not item.pick_location and item.operation_type == 'TurTransfer' or not item.pick_location and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.pick_location }}
             </td>
-            <td colspan="2">{{ item.release_locationi }}</td>
+            <td colspan="2">{{ item.release_location }}</td>
 
             <td colspan="2" {% if not item.tour and item.operation_type == 'Tur' or not item.tour and item.operation_type == 'TurTransfer' or not item.tour and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.tour|default:"---" }}
@@ -147,8 +147,8 @@ Rehber:%20{{ item.guide }}{% endif %}">
             <td {% if item.activity_payment == 'Yes' and not item.activity %}class="bg-danger text-white"{% endif %}>
                 {{ item.activity|default:"----" }}
             </td>
-            <td colspan="2" {% if item.activity_payment == 'Yes' and not item.activitysuplier %}class="bg-danger text-white"{% endif %}>
-                {{ item.activitysuplier|default:"----" }}
+            <td colspan="2" {% if item.activity_payment == 'Yes' and not item.activity_supplier %}class="bg-danger text-white"{% endif %}>
+                {{ item.activity_supplier|default:"----" }}
             </td>
             <td colspan="2" {% if item.museum_payment == 'Yes' and not item.new_museum.all %}class="bg-danger text-white"{% endif %}>
                 {% if item.new_museum.all %}

@@ -6,7 +6,7 @@
     <div class="position-absolute top-0 end-0 bg-primary" style="width: 150px; height: 150px; border-radius: 0 0 0 100%;"></div>
     <div class="position-absolute bottom-0 start-0 bg-info" style="width: 120px; height: 120px; border-radius: 0 100% 0 0;"></div>
   </div>
-  
+
   <!-- Durum Rozeti -->
   <div class="position-absolute end-0 top-0 me-3 mt-3 z-1">
     {% if operation.sold == 'Alındı' %}
@@ -36,7 +36,7 @@
       <div class="d-flex align-items-center justify-content-center me-3" style="width: 70px; height: 70px;">
         <!-- Şirket Logosu - Kısa Ada Göre Dinamik Renk -->
         {% with short_name=operation.buyer_company.short_name|default:"?" %}
-          <div class="company-logo rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
+          <div class="company-logo rounded-circle shadow-sm d-flex align-items-center justify-content-center"
           style="width: 100%; height: 100%; background-image: linear-gradient(135deg, #20c997, #0056b3);">
             <span class="text-white fw-bold" style="font-size: 1.5rem;">{{ short_name|slice:":3" }}</span>
           </div>
@@ -66,25 +66,25 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Bilgi Bölümü - Gelişmiş Görselleştirme -->
   <div class="card-body pt-4 position-relative z-1">
     <!-- Tarih Bölümü - Şık Tasarım -->
     <div class="timeline-container mb-4 pb-3 border-bottom position-relative">
       <div class="timeline-line position-absolute top-50 start-0 end-0" style="height: 3px; background: linear-gradient(to right, #4169E1, #20c997); transform: translateY(-50%); z-index: 0;"></div>
-      
+
       <div class="d-flex align-items-center justify-content-between position-relative">
         <!-- Başlangıç Tarihi -->
         <div class="d-flex align-items-center bg-white pe-3 z-1">
           <div class="bg-gradient rounded-circle p-3 me-2 shadow-sm" style="background-image: linear-gradient(135deg, #4169E1, #0056b3);">
-            <i class="fas fa-plane-departure text-white"></i>
+            <i class="fas fa-plane-departure text-primary"></i>
           </div>
           <div>
             <div class="small text-muted">Başlangıç</div>
             <div class="fw-bold">{{ operation.start|date:"d.m.Y" }}</div>
           </div>
         </div>
-        
+
         <!-- Süre Bilgisi -->
         <div class="position-absolute start-50 top-50 translate-middle bg-white px-3 z-1">
           <span class="badge rounded-3 px-3 py-2" style="background-color: rgba(65, 105, 225, 0.1); color: #4169E1;">
@@ -93,7 +93,7 @@
             {% endwith %}
           </span>
         </div>
-        
+
         <!-- Bitiş Tarihi -->
         <div class="d-flex align-items-center bg-white ps-3 z-1">
           <div>
@@ -101,12 +101,12 @@
             <div class="fw-bold">{{ operation.finish|date:"d.m.Y" }}</div>
           </div>
           <div class="bg-gradient rounded-circle p-3 ms-2 shadow-sm" style="background-image: linear-gradient(135deg, #20c997, #0f9b76);">
-            <i class="fas fa-plane-arrival text-white"></i>
+            <i class="fas fa-plane-arrival text-primary"></i>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- Kalan Ödeme Uyarısı - Daha Dikkat Çekici -->
     {% if operation.remaining_payment > 0 %}
     <div class="alert border-start border-5 border-warning bg-warning bg-opacity-10 mb-4 shadow-sm">
@@ -126,7 +126,7 @@
       </div>
     </div>
     {% endif %}
-    
+
     <!-- 3 Sütunlu Bilgi Kartları - Daha İlgi Çekici -->
     <div class="row">
       <!-- Personel Bilgileri - Gelişmiş Tasarım -->
@@ -140,7 +140,7 @@
               <span class="text-uppercase fw-bold small">Personel Bilgileri</span>
             </h6>
           </div>
-          
+
           <div class="card-body">
             <div class="mb-3 pb-3 border-bottom">
               <div class="d-flex align-items-center">
@@ -150,12 +150,12 @@
                   </span>
                 </div>
                 <div class="ms-3">
-                  <div class="small text-muted">Satan Personel</div>
+                  <div class="small text-muted">Oluşturan Personel</div>
                   <div class="fw-bold">{{ operation.selling_staff|default:"Belirtilmemiş" }}</div>
                 </div>
               </div>
             </div>
-            
+
             <div>
               <div class="d-flex align-items-center">
                 <div class="flex-shrink-0">
@@ -183,7 +183,7 @@
               <span class="text-uppercase fw-bold small">Misafir Bilgileri</span>
             </h6>
           </div>
-          
+
           <div class="card-body">
             <div class="mb-3 pb-3 border-bottom">
               <div class="d-flex align-items-center">
@@ -201,7 +201,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Ödeme Detayları - Daha Kapsamlı -->
       <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm hover-effect">
@@ -213,7 +213,7 @@
               <span class="text-uppercase fw-bold small">Ödeme Detayları</span>
             </h6>
           </div>
-          
+
           <div class="card-body">
             <!-- Ödeme Bilgileri -->
             <div class="payment-details mb-3 pb-3 border-bottom">
@@ -224,7 +224,7 @@
                       <div class="small text-muted mb-1">Ödeme Türü</div>
                       <div>
                         {% if operation.payment_type %}
-                          <span class="badge bg-gradient px-3 py-2" style="background-image: linear-gradient(to right, #4169E1, #0056b3);">
+                          <span class="badge bg-gradient px-3 py-2 text-danger" style="background-image: linear-gradient(to right, #4169E1, #0056b3);">
                             {{ operation.payment_type }}
                           </span>
                         {% else %}
@@ -234,14 +234,14 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="col-6">
                   <div class="card bg-light h-100 border-0">
                     <div class="card-body p-3 text-center">
                       <div class="small text-muted mb-1">Ödeme Kanalı</div>
                       <div>
                         {% if operation.payment_channel %}
-                          <span class="badge bg-gradient px-3 py-2" style="background-image: linear-gradient(to right, #4169E1, #0056b3);">
+                          <span class="badge bg-gradient px-3 py-2 text-danger" style="background-image: linear-gradient(to right, #4169E1, #0056b3);">
                             {{ operation.payment_channel }}
                           </span>
                         {% else %}
@@ -253,13 +253,13 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Para Birimleri - Daha Detaylı -->
             <div class="currency-details">
               <div class="mb-2 small fw-bold text-muted">
                 <i class="fas fa-money-bill-transfer me-1"></i>Satış Para Birimleri
               </div>
-              
+
               <div class="row g-2">
                 {% if operation.tl_sales_price > 0 %}
                 <div class="col-12">
@@ -274,7 +274,7 @@
                   </div>
                 </div>
                 {% endif %}
-                
+
                 {% if operation.usd_sales_price > 0 %}
                 <div class="col-12">
                   <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center border border-light">
@@ -288,7 +288,7 @@
                   </div>
                 </div>
                 {% endif %}
-                
+
                 {% if operation.eur_sales_price > 0 %}
                 <div class="col-12">
                   <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center border border-light">
@@ -302,7 +302,7 @@
                   </div>
                 </div>
                 {% endif %}
-                
+
                 {% if operation.rbm_sales_price > 0 %}
                 <div class="col-12">
                   <div class="p-2 bg-light rounded d-flex justify-content-between align-items-center border border-light">
@@ -316,7 +316,7 @@
                   </div>
                 </div>
                 {% endif %}
-                
+
                 {% if not operation.tl_sales_price and not operation.usd_sales_price and not operation.eur_sales_price and not operation.rbm_sales_price %}
                 <div class="col-12">
                   <div class="p-3 bg-light rounded text-center text-muted border border-light">
@@ -358,10 +358,10 @@
           </div>
         </div>
       {% endif %}
-      
+
     </div>
   </div>
-  
+
   <!-- Kart Altı - İşlem Butonları -->
   <div class="card-footer bg-white mt-auto border-0 pt-3 pb-4 position-relative z-1">
     <div class="row g-3">
@@ -388,20 +388,20 @@
   .operation-card {
     transition: all 0.3s ease;
   }
-  
+
   .operation-card:hover {
     transform: translateY(-5px);
   }
-  
+
   .hover-effect {
     transition: all 0.3s ease;
   }
-  
+
   .hover-effect:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
   }
-  
+
   .currency-icon {
     width: 24px;
     height: 24px;
@@ -409,11 +409,11 @@
     align-items: center;
     justify-content: center;
   }
-  
+
   .status-badge {
     animation: fadeInDown 0.5s;
   }
-  
+
   @keyframes fadeInDown {
     from {
       opacity: 0;
