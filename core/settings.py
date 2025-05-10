@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import socket
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,7 +27,12 @@ SECRET_KEY = 'django-insecure-#%6@u7d=+y5$1_ca_my(yyc1mwy*)74zz2if8z3nv2_rm^3%$g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'www.cargaopr.com',
+    'cargaopr.com',
+]
 
 
 # Application definition
@@ -38,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tour',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -48,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -126,3 +135,64 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Debug Toolbar için IP ayarı
+# Docker kullanımı için hostname'i al
+hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+
+# Tüm yerel IP'leri ve localhost'u ekle
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
+    "::1",          # IPv6 localhost
+]
+
+# Yerel geliştirme IP'lerini ekle
+INTERNAL_IPS += [".".join(ip.split(".")[:-1] + ["1"]) for ip in ips]
+
+# Windows için özel IP'ler
+if sys.platform == 'win32':
+    INTERNAL_IPS += ['10.0.2.2']
+
+# Debug Toolbar'ın sadece superuser'a gösterilmesi için özel ayar
+def show_toolbar(request):
+    # Canlı ortamda da superuser için göster
+    if hasattr(request, 'user') and request.user.is_superuser:
+        return True
+    # Yerel geliştirme ortamında IP kontrolü yap
+    return bool(set(request.META.get('REMOTE_ADDR', '').split(',')) & set(INTERNAL_IPS))
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': 'core.settings.show_toolbar',
+    'DISABLE_PANELS': {
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+        'debug_toolbar.panels.versions.VersionsPanel',
+    },
+    'SHOW_TEMPLATE_CONTEXT': True,
+    'ENABLE_STACKTRACES': True,
+    'RESULTS_CACHE_SIZE': 50,  # Önbellek boyutunu artır
+    'RENDER_PANELS': True,
+    'MAX_HISTORY_ITEMS': 100,  # Geçmiş öğe sayısını artır
+    'SHOW_COLLAPSED': True,  # Başlangıçta panelleri kapalı göster
+    'PROFILER_MAX_DEPTH': 25,  # Profil derinliğini artır
+}
+
+# Debug Toolbar panellerini özelleştir
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+]
+
+# CSRF güvenlik ayarları
+CSRF_TRUSTED_ORIGINS = [
+    'https://www.cargaopr.com',
+    'http://localhost:8000',
+]

@@ -80,6 +80,8 @@
                             <li><a class="dropdown-item" href="{% url 'admin:index' %}">YÖNETİM PANELİ</a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
+                            <li><a class="dropdown-item" href="{% url 'tour:change_password' %}">ŞİFREMİ DEĞİŞTİR</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'tour:logout' %}" onclick="return confirm('ÇIKIŞ YAPMAK İSTEDİĞİNİZDEN EMİN MİSİNİZ?');">ÇIKIŞ YAP</a></li>
                         </ul>
                     </li>
@@ -93,4 +95,4 @@
             </ul>
         </div>
     </div>
-</nav> 
+</nav>

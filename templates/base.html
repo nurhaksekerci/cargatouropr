@@ -2,11 +2,170 @@
 <html lang="tr" class="h-100">
 {% include 'includes/head.html' %}
 <body class="d-flex flex-column h-100">
+    {% if job %}
+    <style>
+    .side-menu {
+        position: fixed;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 9999;
+        max-height: 80vh;
+        overflow-y: auto;
+        background: rgba(255,255,255,0.95);
+        padding: 15px;
+        border-radius: 0 10px 10px 0;
+        box-shadow: 2px 0 15px rgba(0,0,0,0.2);
+        width: 15%;
+        margin-left: 10px;
+    }
+
+    
+
+    .side-menu::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .side-menu::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .side-menu::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 5px;
+    }
+
+    .main-content {
+        margin-left: 17%;
+    }
+
+    .side-menu .btn {
+        font-size: 0.7vw;
+        padding: 0.4vw 0.6vw;
+        white-space: normal;
+        height: auto;
+        word-wrap: break-word;
+        line-height: 1.2;
+    }
+
+    .side-menu .btn i {
+        font-size: 0.6vw;
+    }
+
+    </style>
+
+    <!-- Sol taraftaki sabit operasyon linkleri -->
+    <div class="side-menu">
+      <div class="tab-content">
+        <div class="tab-pane fade {% if not search_date %}show active{% endif %}" id="side-today">
+          {% for item in today_items %}
+            <a href="#" onclick="activateTab('today', 'item-{{item.id}}'); return false;" class="btn btn-sm btn-outline-primary d-block mb-2 text-dark w-100"> 
+              <i class="fas fa-clipboard-list me-2"></i>{{ item.day.operation.ticket|upper }} - {{ item.operation_type|upper}}
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="tab-pane fade" id="side-tomorrow">
+          {% for item in tomorrow_items %}
+            <a href="#" onclick="activateTab('tomorrow', 'item-{{item.id}}'); return false;" class="btn btn-sm btn-outline-warning d-block mb-2 text-dark w-100"> 
+              <i class="fas fa-clipboard-list me-2"></i>{{ item.day.operation.ticket|upper }} - {{ item.operation_type|upper}}
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="tab-pane fade" id="side-nextday">
+          {% for item in nextday_items %}
+            <a href="#" onclick="activateTab('nextday', 'item-{{item.id}}'); return false;" class="btn btn-sm btn-outline-info d-block mb-2 text-dark w-100"> 
+              <i class="fas fa-clipboard-list me-2"></i>{{ item.day.operation.ticket|upper }} - {{ item.operation_type|upper}}
+            </a>
+          {% endfor %}
+        </div>
+        {% if search_date %}
+        <div class="tab-pane fade" id="side-search">
+          {% for item in search_date %}
+            <a href="#" onclick="activateTab('search', 'item-{{item.id}}'); return false;" class="btn btn-sm btn-outline-info d-block mb-2 text-dark w-100"> 
+              <i class="fas fa-clipboard-list me-2"></i>{{ item.day.operation.ticket|upper }} - {{ item.operation_type|upper}}
+            </a>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <script>
+    function activateTab(tabName, itemId = null) {
+        // Ana tab'ı aktive et
+        const mainTab = document.querySelector(`#${tabName}-tab`);
+        if (mainTab) {
+            const bsTab = new bootstrap.Tab(mainTab);
+            bsTab.show();
+        }
+
+        // Side menu'deki ilgili tab'ı göster
+        document.querySelectorAll('.side-menu .tab-pane').forEach(pane => {
+            pane.classList.remove('show', 'active');
+        });
+        const sidePane = document.querySelector(`#side-${tabName}`);
+        if (sidePane) {
+            sidePane.classList.add('show', 'active');
+        }
+
+        // Eğer itemId varsa, o öğeye scroll yap
+        if (itemId) {
+            setTimeout(() => {
+                const item = document.getElementById(itemId);
+                if (item) {
+                    item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    item.style.backgroundColor = '#fff3cd';
+                    setTimeout(() => {
+                        item.style.transition = 'background-color 0.5s ease';
+                        item.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }, 300);
+        }
+    }
+
+    // Sayfa yüklendiğinde ve tab değiştiğinde side menu'yu güncelle
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bootstrap tab olaylarını dinle
+        const tabs = document.querySelectorAll('button[data-bs-toggle="tab"]');
+        tabs.forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function (event) {
+                const tabName = event.target.id.replace('-tab', '');
+                // Side menu'deki ilgili tab'ı göster
+                document.querySelectorAll('.side-menu .tab-pane').forEach(pane => {
+                    pane.classList.remove('show', 'active');
+                });
+                const sidePane = document.querySelector(`#side-${tabName}`);
+                if (sidePane) {
+                    sidePane.classList.add('show', 'active');
+                }
+            });
+        });
+
+        // URL'de hash varsa
+        if(window.location.hash) {
+            const itemId = window.location.hash.substring(1);
+            const item = document.getElementById(itemId);
+            if(item) {
+                const tabPane = item.closest('.tab-pane');
+                if(tabPane) {
+                    const tabId = tabPane.id;
+                    const tabName = tabId.replace('-tab', '');
+                    activateTab(tabName, itemId);
+                }
+            }
+        }
+    });
+    </script>
+    {% endif %}
+
     {% include 'includes/navbar.html' %}
 
     <!-- İçerik -->
     <main class="flex-shrink-0">
-        <div class="container py-4">
+        <div class="container py-4 {% if job %}main-content{% endif %}">
             {% include 'includes/messages.html' %}
 
             <!-- Ana İçerik -->

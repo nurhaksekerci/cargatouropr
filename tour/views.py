@@ -1,28 +1,28 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib import messages
 import re
 import requests
 from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from .models import (
-    Operation, Operationday, Operationitem, Sirket, Tour, Transfer, Vehicle, Guide, Hotel,
-    Activity, Museum, Supplier, Activitysupplier,
-    Cost, Activitycost, Buyercompany, Personel, UserActivityLog
-)
-from .forms import (
-    OperationFileForm, OperationForm, OperationItemForm, SirketForm, TourForm, TransferForm, VehicleForm, GuideForm, HotelForm,
-    ActivityForm, MuseumForm, SupplierForm, ActivitysupplierForm,
-    CostForm, ActivitycostForm, BuyercompanyForm, PersonelForm,
-
-)
+from .models import *
+from .forms import *
+from django.contrib.auth.models import User
 from django.utils import timezone
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django.template.defaulttags import register
+import random
+import logging
+from django.contrib.auth.forms import PasswordChangeForm
+from django.db.models import Prefetch
+from django.db.models.functions import ExtractYear
+
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -132,6 +132,120 @@ def logout_view(request):
     logout(request)
     messages.success(request, "BAŞARIYLA ÇIKIŞ YAPTINIZ!")
     return redirect('tour:login')
+
+def forgot_password(request):
+    """
+    Kullanıcı adına göre şifre sıfırlama işlemini başlatır.
+    """
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        try:
+            user = User.objects.get(username=username)
+            # SMS kodunu oluştur ve cache'e kaydet
+            sms_code = generate_sms_code()
+            cache_key = f'password_reset_{username}'
+            cache.set(cache_key, sms_code, timeout=300)  # 5 dakika geçerli
+
+            # SMS gönder
+            try:
+                send_sms_code(user, sms_code)
+                messages.success(request, 'SMS kodu telefonunuza gönderildi.')
+                return redirect('tour:reset_password', username=username)
+            except Exception as e:
+                logger.error(f"SMS gönderme hatası: {str(e)}")
+                messages.error(request, 'SMS gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+        except User.DoesNotExist:
+            messages.error(request, 'Kullanıcı bulunamadı!')
+        except Exception as e:
+            logger.error(f"Şifre sıfırlama hatası: {str(e)}")
+            messages.error(request, 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+
+    return render(request, 'forgot_password.html', {'user_found': False})
+
+def reset_password(request, username):
+    """
+    SMS kodu doğrulaması ve şifre sıfırlama işlemini gerçekleştirir.
+    """
+    try:
+        user = User.objects.get(username=username)
+        cache_key = f'password_reset_{username}'
+        stored_code = cache.get(cache_key)
+
+        if request.method == 'POST':
+            user_code = request.POST.get('code')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+
+            # SMS kodu kontrolü
+            if not stored_code or user_code != stored_code:
+                messages.error(request, 'Geçersiz veya süresi dolmuş SMS kodu!')
+                return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
+
+            # Şifre kontrolü
+            if not validate_password(request, new_password, confirm_password):
+                return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
+
+            # Şifreyi güncelle
+            try:
+                user.set_password(new_password)
+                user.save()
+                # Cache'den kodu temizle
+                cache.delete(cache_key)
+                messages.success(request, 'Şifreniz başarıyla güncellendi!')
+                return redirect('tour:login')
+            except Exception as e:
+                logger.error(f"Şifre güncelleme hatası: {str(e)}")
+                messages.error(request, 'Şifre güncellenirken bir hata oluştu.')
+                return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
+
+        return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
+    except User.DoesNotExist:
+        messages.error(request, 'Kullanıcı bulunamadı!')
+        return redirect('tour:forgot_password')
+    except Exception as e:
+        logger.error(f"Şifre sıfırlama hatası: {str(e)}")
+        messages.error(request, 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
+        return redirect('tour:forgot_password')
+
+def generate_sms_code():
+    """
+    6 haneli rastgele SMS kodu oluşturur.
+    """
+    return str(random.randint(100000, 999999))
+
+def send_sms_code(user, code):
+    """
+    Kullanıcıya SMS kodu gönderir.
+    """
+    try:
+        phone = user.personel.first().phone
+        message = f"Sayın {user.get_full_name().upper()}, Şifre sıfırlama kodunuz: {code}"
+        sms(normalize_phone_number(phone), message)
+    except Exception as e:
+        logger.error(f"SMS gönderme hatası: {str(e)}")
+        raise
+
+def validate_password(request, new_password, confirm_password):
+    """
+    Şifre doğrulama kurallarını kontrol eder.
+    """
+    if new_password != confirm_password:
+        messages.error(request, 'Şifreler eşleşmiyor!')
+        return False
+
+    if len(new_password) < 8:
+        messages.error(request, 'Şifre en az 8 karakter olmalıdır!')
+        return False
+
+    if not any(char.isdigit() for char in new_password):
+        messages.error(request, 'Şifre en az bir rakam içermelidir!')
+        return False
+
+    if not any(char.isupper() for char in new_password):
+        messages.error(request, 'Şifre en az bir büyük harf içermelidir!')
+        return False
+
+    return True
 
 @login_required(login_url='tour:login')
 def dashboard(request):
@@ -260,6 +374,8 @@ def dashboard(request):
             ip_address=get_client_ip(request),
             browser_info=request.META.get('HTTP_USER_AGENT', '')
         )
+
+    activity_cost_calculate()
 
     # Context'i cache'e ekle
     cache.set(cache_key, context, cache_timeout)
@@ -1057,58 +1173,85 @@ def my_user_activity_log(request):
         # Son 3 günlük kayıtları alacak tarih hesaplaması
         son_uc_gun = timezone.now() - timezone.timedelta(days=3)
 
+        # Temel sorgu yapısını oluştur - ilişkili alanları önceden yükle
+        base_query = UserActivityLog.objects.select_related(
+            'company',
+            'staff',
+            'staff__user'
+        ).filter(
+            timestamp__gte=son_uc_gun
+        ).order_by('-timestamp')
+
         # Başlık ve sayfa açıklaması
         title = "SON 3 GÜNLÜK KULLANICI AKTİVİTE KAYITLARIM"
 
         if hasattr(request.user, 'personel') and request.user.personel.exists():
-            # Personelin kendi loglarını getir (son 3 gün)
-            staff = request.user.personel.first()
-            company = staff.company
-            user_activity_logs = UserActivityLog.objects.filter(
-                staff=staff,
-                timestamp__gte=son_uc_gun
-            ).order_by('-timestamp')
+            try:
+                # Personelin kendi loglarını getir (son 3 gün)
+                staff = request.user.personel.select_related('company', 'user').first()
+                if not staff:
+                    raise ValueError("Personel bilgisi bulunamadı")
 
-            # Log oluştur - kullanıcı kendi aktivite kayıtlarını görüntüledi
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action="Son 3 günlük aktivite kayıtlarını görüntüledi",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
+                company = staff.company
+                if not company:
+                    raise ValueError("Şirket bilgisi bulunamadı")
+
+                # Personele özel filtreleme
+                user_activity_logs = base_query.filter(staff=staff)
+
+                # Log oluştur - kullanıcı kendi aktivite kayıtlarını görüntüledi
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action="Son 3 günlük aktivite kayıtlarını görüntüledi",
+                    ip_address=get_client_ip(request),
+                    browser_info=request.META.get('HTTP_USER_AGENT', '')
+                )
+            except ValueError as ve:
+                messages.warning(request, f"PERSONEL BİLGİSİ HATASI: {str(ve)}")
+                user_activity_logs = UserActivityLog.objects.none()
+            except Exception as e:
+                messages.error(request, f"PERSONEL SORGUSUNDA HATA: {str(e)}")
+                user_activity_logs = UserActivityLog.objects.none()
+
         elif request.user.is_superuser:
-            # Süper kullanıcı tüm kayıtları görüntüleyebilir (son 3 gün)
-            title = "SON 3 GÜNLÜK TÜM KULLANICI AKTİVİTE KAYITLARI"
-            user_activity_logs = UserActivityLog.objects.filter(
-                timestamp__gte=son_uc_gun
-            ).order_by('-timestamp')
+            try:
+                # Süper kullanıcı tüm kayıtları görüntüleyebilir (son 3 gün)
+                title = "SON 3 GÜNLÜK TÜM KULLANICI AKTİVİTE KAYITLARI"
+                user_activity_logs = base_query
 
-            # Log oluştur - süper kullanıcı tüm aktivite kayıtlarını görüntüledi
-            UserActivityLog.objects.create(
-                action="Süper kullanıcı son 3 günlük tüm aktivite kayıtlarını görüntüledi",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
+                # Log oluştur - süper kullanıcı tüm aktivite kayıtlarını görüntüledi
+                UserActivityLog.objects.create(
+                    action="Süper kullanıcı son 3 günlük tüm aktivite kayıtlarını görüntüledi",
+                    ip_address=get_client_ip(request),
+                    browser_info=request.META.get('HTTP_USER_AGENT', '')
+                )
+            except Exception as e:
+                messages.error(request, f"SÜPER KULLANICI SORGUSUNDA HATA: {str(e)}")
+                user_activity_logs = UserActivityLog.objects.none()
         else:
             # Personel olmayan kullanıcılar için boş liste döndür
             user_activity_logs = UserActivityLog.objects.none()
             messages.warning(request, "HESABINIZ HERHANGİ BİR ŞİRKETLE İLİŞKİLENDİRİLMEMİŞ!")
 
+        # Sorgu sonuçlarını değerlendir
+        if not user_activity_logs.exists():
+            messages.info(request, "GÖRÜNTÜLENECEK AKTİVİTE KAYDI BULUNAMADI")
+
         context = {
             'page_title': title,
-            'logs': user_activity_logs,
+            'logs': user_activity_logs[:1000],  # Performans için maksimum 1000 kayıt
             'is_activity_log': True,  # Şablonda farklı görünüm için
-            'filtre_tarih': son_uc_gun.strftime('%d.%m.%Y')  # Filtreleme tarihi bilgisi
+            'filtre_tarih': son_uc_gun.strftime('%d.%m.%Y'),  # Filtreleme tarihi bilgisi
+            'total_count': user_activity_logs.count()  # Toplam kayıt sayısı
         }
 
         return render(request, 'generic/activity_logs.html', context)
 
     except Exception as e:
+        logger.error(f"Aktivite log hatası: {str(e)}", exc_info=True)
         messages.error(request, f"AKTİVİTE KAYITLARI GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
         return redirect('tour:dashboard')
-
-
 
 
 
@@ -1404,6 +1547,10 @@ def operationitem_edit(request, pk):
                             new_item.vehicle_price = cost.bus
                     else:
                         print("Maliyet Bulunamadı")
+
+            if new_item.activity and new_item.manuel_activity_price and new_item.activity_price == 0:
+                new_item.activity_price = new_item.manuel_activity_price
+
             new_item.save()
 
             if new_item.operation_type == "Transfer":
@@ -1534,355 +1681,530 @@ def operationday_item_create(request, day_id):
 
     return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
 
+
 def operation_list(request):
     """
     Operasyonları aylara, yıllara ve diğer kriterlere göre listeleyen view fonksiyonu.
-
-    Aylara ve diğer kriterlere göre filtreleme yapılabilir.
-    Ay seçilmediğinde, mevcut tarih ayı varsayılan olarak seçilir.
+    Performans optimizasyonu yapılmış versiyonu.
     """
-    # Filtre parametrelerini al
-    month = request.GET.get('month', '')
-    year = request.GET.get('year', '')
-    ticket = request.GET.get('ticket', '')
-    buyer_company_id = request.GET.get('buyer_company', '')
-    selling_staff_id = request.GET.get('selling_staff', '')
-    follow_staff_id = request.GET.get('follow_staff', '')
-    start_date = request.GET.get('start_date', '')
-    end_date = request.GET.get('end_date', '')
+    try:
+        # Filtre parametrelerini al
+        month = request.GET.get('month', '')
+        year = request.GET.get('year', '')
+        ticket = request.GET.get('ticket', '')
+        buyer_company_id = request.GET.get('buyer_company', '')
+        selling_staff_id = request.GET.get('selling_staff', '')
+        follow_staff_id = request.GET.get('follow_staff', '')
+        start_date = request.GET.get('start_date', '')
+        end_date = request.GET.get('end_date', '')
 
-    # Şirket bilgisini al
-    company = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        company = request.user.personel.first().company
+        # Şirket bilgisini tek sorguda al
+        staff = None
+        company = None
+        if hasattr(request.user, 'personel'):
+            staff = Personel.objects.select_related('company').filter(user=request.user).first()
+            company = staff.company if staff else None
 
-    # Temel sorgu - şirkete ait operasyonlar veya admin için tüm operasyonlar
-    if company:
-        queryset = Operation.objects.filter(company=company, is_delete=False).select_related('buyer_company', 'selling_staff', 'follow_staff')
-    elif request.user.is_superuser:
-        queryset = Operation.objects.filter(is_delete=False).select_related('buyer_company', 'selling_staff', 'follow_staff')
-    else:
-        queryset = Operation.objects.none()
-
-    # Ay filtreleme
-    today = timezone.now().date()
-    current_month = today.month
-    current_year = today.year
-
-    # Ay seçilmemişse ve diğer filtreler de yoksa, varsayılan olarak mevcut ayı seç
-    if not month and not any([ticket, buyer_company_id, selling_staff_id, follow_staff_id, start_date, end_date]):
-        month = str(current_month)
-
-    # Yıl seçilmemişse ve ay seçilmişse, varsayılan olarak mevcut yılı seç
-    if month and not year:
-        year = str(current_year)
-
-    # Filtreleri uygula
-    if month and year:
-        month_int = int(month)
-        year_int = int(year)
-
-        # Ay başlangıç ve bitiş tarihleri
-        month_start = timezone.datetime(year_int, month_int, 1).date()
-        if month_int == 12:
-            month_end = timezone.datetime(year_int + 1, 1, 1).date() - timezone.timedelta(days=1)
-        else:
-            month_end = timezone.datetime(year_int, month_int + 1, 1).date() - timezone.timedelta(days=1)
-
-        # Operasyonun tarihi, seçilen ay ile kesişiyorsa filtrele
-        queryset = queryset.filter(
-            Q(start__lte=month_end) & Q(finish__gte=month_start)
+        # Temel sorgu yapısını oluştur - ilişkili alanları önceden yükle
+        base_query = Operation.objects.select_related(
+            'company',
+            'buyer_company',
+            'selling_staff',
+            'selling_staff__user',
+            'follow_staff',
+            'follow_staff__user'
+        ).filter(
+            is_delete=False
         )
 
-    # Diğer filtreleri uygula
-    if ticket:
-        queryset = queryset.filter(ticket__icontains=ticket)
+        # Şirket filtrelemesi
+        if company:
+            base_query = base_query.filter(company=company)
 
-    if buyer_company_id:
-        queryset = queryset.filter(buyer_company_id=buyer_company_id)
+        # Tarih hesaplamaları
+        today = timezone.now().date()
+        current_month = today.month
+        current_year = today.year
 
-    if selling_staff_id:
-        queryset = queryset.filter(selling_staff_id=selling_staff_id)
+        # Ay seçilmemişse ve diğer filtreler de yoksa, varsayılan olarak mevcut ayı seç
+        if not any([month, ticket, buyer_company_id, selling_staff_id, follow_staff_id, start_date, end_date]):
+            month = str(current_month)
+            year = str(current_year)
 
-    if follow_staff_id:
-        queryset = queryset.filter(follow_staff_id=follow_staff_id)
+        # Yıl seçilmemişse ve ay seçilmişse, varsayılan olarak mevcut yılı seç
+        if month and not year:
+            year = str(current_year)
 
-    if start_date:
-        queryset = queryset.filter(start__gte=start_date)
+        # Filtreleri uygula
+        filters = Q()
 
-    if end_date:
-        queryset = queryset.filter(finish__lte=end_date)
+        # Ay ve yıl filtresi
+        if month and year:
+            try:
+                month_int = int(month)
+                year_int = int(year)
 
-    # İstatistik bilgileri
-    today = timezone.now().date()
+                # Ay başlangıç ve bitiş tarihleri
+                month_start = timezone.datetime(year_int, month_int, 1).date()
+                if month_int == 12:
+                    month_end = timezone.datetime(year_int + 1, 1, 1).date() - timezone.timedelta(days=1)
+                else:
+                    month_end = timezone.datetime(year_int, month_int + 1, 1).date() - timezone.timedelta(days=1)
 
-    # Tamamlanan operasyonlar (bitiş tarihi geçmiş)
-    completed_count = queryset.filter(finish__lt=today).count()
+                # Operasyonun tarihi, seçilen ay ile kesişiyorsa filtrele
+                filters &= Q(start__lte=month_end) & Q(finish__gte=month_start)
+            except ValueError:
+                messages.error(request, "Geçersiz ay veya yıl değeri!")
 
-    # Aktif operasyonlar (başlangıç tarihi geçmiş ve bitiş tarihi gelmemiş)
-    active_count = queryset.filter(start__lte=today, finish__gte=today).count()
+        # Diğer filtreleri ekle
+        if ticket:
+            filters &= Q(ticket__icontains=ticket)
+        if buyer_company_id:
+            filters &= Q(buyer_company_id=buyer_company_id)
+        if selling_staff_id:
+            filters &= Q(selling_staff_id=selling_staff_id)
+        if follow_staff_id:
+            filters &= Q(follow_staff_id=follow_staff_id)
+        if start_date:
+            filters &= Q(start__gte=start_date)
+        if end_date:
+            filters &= Q(finish__lte=end_date)
 
-    # Gelecek operasyonlar (başlangıç tarihi gelecekte)
-    upcoming_count = queryset.filter(start__gt=today).count()
+        # Filtreleri uygula ve sonuçları sırala
+        queryset = base_query.filter(filters).order_by('-start')
 
-    # Yıl listesi - tüm operasyonlardaki yılları al
-    year_list = set()
-    all_operations = Operation.objects.all()
-    for op in all_operations:
-        if op.start:
-            year_list.add(op.start.year)
-        if op.finish:
-            year_list.add(op.finish.year)
-    year_list = sorted(list(year_list))
+        # İstatistik bilgileri - tek sorguda hesapla
+        stats = {
+            'completed_count': queryset.filter(finish__lt=today).count(),
+            'active_count': queryset.filter(start__lte=today, finish__gte=today).count(),
+            'upcoming_count': queryset.filter(start__gt=today).count()
+        }
 
-    # Müşteri şirketlerini getir
-    if company:
-        companies = Buyercompany.objects.filter(company=company, is_delete=False)
-    elif request.user.is_superuser:
-        companies = Buyercompany.objects.filter(is_delete=False)
-    else:
-        companies = Buyercompany.objects.none()
+        # Yıl listesini verimli şekilde hesapla
+        year_list = Operation.objects.filter(
+            is_delete=False
+        ).annotate(
+            year=ExtractYear('start')
+        ).values_list(
+            'year', flat=True
+        ).distinct().order_by('year')
 
-    # Personel listesi
-    if company:
-        staffs = Personel.objects.filter(company=company, is_active=True)
-    elif request.user.is_superuser:
-        staffs = Personel.objects.filter(is_active=True)
-    else:
-        staffs = Personel.objects.none()
+        # None değerleri filtrele ve unique yılları al
+        year_list = sorted(set(year for year in year_list if year is not None))
 
-    # Operasyonları başlangıç tarihine göre sırala
-    operations = queryset.order_by('-start')
+        # Eğer hiç yıl bulunamazsa, mevcut yılı ekle
+        if not year_list:
+            year_list = [current_year]
 
-    # Log kaydı oluştur
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
+        # Müşteri şirketlerini ve personel listesini tek sorguda al
+        companies = Buyercompany.objects.filter(
+            is_delete=False,
+            **({"company": company} if company else {})
+        ).only('id', 'name')
 
-        UserActivityLog.objects.create(
-            company=company,
-            staff=staff,
-            action=f"Operasyon listesini görüntüledi",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    elif request.user.is_superuser:
-        UserActivityLog.objects.create(
-            action=f"Süper kullanıcı operasyon listesini görüntüledi",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
+        staffs = Personel.objects.filter(
+            is_active=True,
+            **({"company": company} if company else {})
+        ).select_related('user').only('id', 'user__first_name', 'user__last_name')
 
-    context = {
-        'operations': operations,
-        'selected_month': month,
-        'selected_year': year,
-        'year_list': year_list,
-        'companies': companies,
-        'staffs': staffs,
-        'completed_count': completed_count,
-        'active_count': active_count,
-        'upcoming_count': upcoming_count,
-    }
+        # Log kaydı oluştur
+        if staff:
+            UserActivityLog.objects.create(
+                company=company,
+                staff=staff,
+                action=f"Operasyon listesini görüntüledi",
+                ip_address=get_client_ip(request),
+                browser_info=request.META.get('HTTP_USER_AGENT', '')
+            )
+        elif request.user.is_superuser:
+            UserActivityLog.objects.create(
+                action=f"Süper kullanıcı operasyon listesini görüntüledi",
+                ip_address=get_client_ip(request),
+                browser_info=request.META.get('HTTP_USER_AGENT', '')
+            )
 
-    return render(request, 'operation/list.html', context)
+        # Sonuçları sayfalama
+        paginator = Paginator(queryset, 50)  # Her sayfada 50 kayıt
+        page = request.GET.get('page')
+        try:
+            operations = paginator.page(page)
+        except PageNotAnInteger:
+            operations = paginator.page(1)
+        except EmptyPage:
+            operations = paginator.page(paginator.num_pages)
+
+        context = {
+            'operations': operations,
+            'selected_month': month,
+            'selected_year': year,
+            'year_list': year_list,
+            'companies': companies,
+            'staffs': staffs,
+            **stats,  # İstatistikleri context'e ekle
+            'total_count': queryset.count(),
+            'current_filters': {
+                'month': month,
+                'year': year,
+                'ticket': ticket,
+                'buyer_company_id': buyer_company_id,
+                'selling_staff_id': selling_staff_id,
+                'follow_staff_id': follow_staff_id,
+                'start_date': start_date,
+                'end_date': end_date
+            }
+        }
+
+        return render(request, 'operation/list.html', context)
+
+    except Exception as e:
+        logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
+        messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
 
 
+@login_required(login_url='tour:login')
 def job_list(request):
-    # Kullanıcı bilgilerini tek seferde al
-    today = timezone.now().date()
-    tomorrow = today + timezone.timedelta(days=1)
-    nextday = today + timezone.timedelta(days=2)
-    job = True
+    try:
+        # Tarihleri hesapla
+        today = timezone.now().date()
+        tomorrow = today + timezone.timedelta(days=1)
+        nextday = today + timezone.timedelta(days=2)
+        dates = [today, tomorrow, nextday]
 
-    company = None
-    staff = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
+        # Kullanıcı ve şirket bilgisini tek sorguda al
+        staff = None
+        company = None
+        if hasattr(request.user, 'personel'):
+            staff = (Personel.objects
+                    .select_related('company', 'user')
+                    .only('id', 'company__id', 'user__id', 'user__first_name', 'user__last_name')
+                    .filter(user=request.user)
+                    .first())
+            company = staff.company if staff else None
 
-    # Performans için ilişkili modelleri tek sorguda getir
-    # Her sorgunun kendine özgü cache anahtarı olacak
-    cache_prefix = f"job_list_{company.id if company else 'admin'}"
+        # Temel sorgu yapısını oluştur ve gerekli alanları seç
+        base_query = (Operationitem.objects
+            .filter(
+                is_delete=False,
+                is_processed=False,
+                day__date__in=dates
+            )
+            .select_related(
+                'day',
+                'day__operation',
+                'day__operation__follow_staff__user',
+                'day__operation__selling_staff__user',
+                'day__operation__buyer_company',
+                'tour',
+                'transfer',
+                'vehicle',
+                'supplier',
+                'hotel',
+                'activity',
+                'activity_supplier',
+                'guide'
+            )
+            .prefetch_related(
+                'new_museum',
+                'files',
+                'day__operation__follow_staff',
+                'day__operation__selling_staff'
+            )
+            .defer(
+                'day__operation__follow_staff__dark_mode',
+                'day__operation__follow_staff__created_at',
+                'day__operation__follow_staff__is_delete',
+                'day__operation__selling_staff__dark_mode',
+                'day__operation__selling_staff__created_at',
+                'day__operation__selling_staff__is_delete',
+                'tour__created_at',
+                'tour__updated_at',
+                'transfer__created_at',
+                'transfer__updated_at',
+                'hotel__mail',
+                'hotel__one_person',
+                'hotel__two_person',
+                'hotel__tree_person',
+                'hotel__finish',
+                'hotel__currency',
+                'guide__doc_no',
+                'guide__phone',
+                'guide__mail',
+                'guide__price',
+                'guide__currency'
+            ))
 
-    # Temel sorgu yapısını oluştur - sadece gerekli alanları seç
-    base_query = Operationitem.objects.select_related(
-        'day',
-        'day__operation',
-        'day__operation__follow_staff',
-        'tour',
-        'transfer',
-        'vehicle',
-        'supplier'
-    ).filter(is_delete=False)
+        if company:
+            base_query = base_query.filter(company=company)
 
-    # Arama işlemi
-    search_date = None
-    if request.method == 'POST':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
+        # Tüm öğeleri tek sorguda al ve hafızada grupla
+        all_items = base_query.order_by('day__date', 'pick_time')
+
+        # Sonuçları hafızada grupla
+        items_by_date = {date: [] for date in dates}
+        for item in all_items:
+            items_by_date[item.day.date].append(item)
+
+        # Log kaydını oluştur
+        log_data = {
+            'ip_address': get_client_ip(request),
+            'browser_info': request.META.get('HTTP_USER_AGENT', ''),
+            'action': "Günlük iş listesini görüntüledi" if staff else "Süper kullanıcı günlük iş listesini görüntüledi",
+            'company': company,
+            'staff': staff
+        }
+        UserActivityLog.objects.create(**log_data)
+
+        # Tarih araması için değişkenler
+        search_date = None
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
 
         if start_date:
-            # Önbellek anahtarı oluştur
-            search_cache_key = f"{cache_prefix}_search_{start_date}_{end_date}"
-            # Önbellekten veriyi almaya çalış
-            search_date = cache.get(search_cache_key)
+            # Tarih aralığı sorgusu için optimize edilmiş sorgu
+            search_query = (Operationitem.objects
+                .filter(is_delete=False)
+                .select_related(
+                    'day',
+                    'day__operation',
+                    'day__operation__follow_staff__user',
+                    'day__operation__selling_staff__user',
+                    'day__operation__buyer_company',
+                    'tour',
+                    'transfer',
+                    'vehicle',
+                    'supplier',
+                    'hotel',
+                    'activity',
+                    'activity_supplier',
+                    'guide'
+                )
+                .prefetch_related(
+                    'new_museum',
+                    'files',
+                    'day__operation__follow_staff',
+                    'day__operation__selling_staff'
+                )
+                .defer(
+                    'day__operation__follow_staff__dark_mode',
+                    'day__operation__follow_staff__created_at',
+                    'day__operation__follow_staff__is_delete',
+                    'day__operation__selling_staff__dark_mode',
+                    'day__operation__selling_staff__created_at',
+                    'day__operation__selling_staff__is_delete',
+                    'tour__created_at',
+                    'tour__updated_at',
+                    'transfer__created_at',
+                    'transfer__updated_at',
+                    'hotel__mail',
+                    'hotel__one_person',
+                    'hotel__two_person',
+                    'hotel__tree_person',
+                    'hotel__finish',
+                    'hotel__currency',
+                    'guide__doc_no',
+                    'guide__phone',
+                    'guide__mail',
+                    'guide__price',
+                    'guide__currency'
+                ))
 
-            # Önbellekte yoksa veritabanından çek
-            if search_date is None:
-                search_query = base_query
-                if company:
-                    search_query = search_query.filter(company=company)
+            if company:
+                search_query = search_query.filter(company=company)
+            if start_date and end_date:
+                date_filter = {'day__date__gte': start_date}
+                if end_date:
+                    date_filter['day__date__lte'] = end_date
+            elif start_date and not end_date:
+                date_filter = {'day__date' : start_date}
 
-                if not end_date:
-                    # Tek gün araması
-                    search_date = search_query.filter(day__date=start_date).order_by('pick_time')
-                else:
-                    # Tarih aralığı araması
-                    search_date = search_query.filter(
-                        day__date__range=(start_date, end_date)
-                    ).order_by('day__date', 'pick_time')
+            search_date = search_query.filter(**date_filter).order_by('day__date', 'pick_time')
 
-                # Sonuçları önbelleğe al (5 dakika)
-                cache.set(search_cache_key, search_date, 300)
+            if not search_date.exists():
+                messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
+                search_date = None
+            elif staff:
+                UserActivityLog.objects.create(
+                    company=company,
+                    staff=staff,
+                    action=f"İş listesinde tarih araması yaptı: {start_date} - {end_date or start_date}",
+                    ip_address=get_client_ip(request),
+                    browser_info=request.META.get('HTTP_USER_AGENT', '')
+                )
 
-    # Günlük verileri sorgula - önbellekleme ile optimizasyon
-    today_cache_key = f"{cache_prefix}_today_{today}"
-    tomorrow_cache_key = f"{cache_prefix}_tomorrow_{tomorrow}"
-    nextday_cache_key = f"{cache_prefix}_nextday_{nextday}"
-
-    # Bugün için önbellekten kontrol
-    today_items = cache.get(today_cache_key)
-    if today_items is None:
-        today_items = base_query.filter(day__date=today).order_by('pick_time')
-        cache.set(today_cache_key, today_items, 300)  # 5 dakika önbellek
-
-    # Yarın için önbellekten kontrol
-    tomorrow_items = cache.get(tomorrow_cache_key)
-    if tomorrow_items is None:
-        tomorrow_items = base_query.filter(day__date=tomorrow).order_by('pick_time')
-        cache.set(tomorrow_cache_key, tomorrow_items, 300)
-
-    # Sonraki gün için önbellekten kontrol
-    nextday_items = cache.get(nextday_cache_key)
-    if nextday_items is None:
-        nextday_items = base_query.filter(day__date=nextday).order_by('pick_time')
-        cache.set(nextday_cache_key, nextday_items, 300)
-
-    # Log kaydı oluştur - DRY prensibine uygun kod
-    if staff:
-        UserActivityLog.objects.create(
-            company=company,
-            staff=staff,
-            action="Günlük iş listesini görüntüledi",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    elif request.user.is_superuser:
-        UserActivityLog.objects.create(
-            action="Süper kullanıcı günlük iş listesini görüntüledi",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-
-    # Tek bir context dictionary oluştur
-    context = {
-        'today': today,
-        'tomorrow': tomorrow,
-        'nextday': nextday,
-        'today_items': today_items,
-        'tomorrow_items': tomorrow_items,
-        'nextday_items': nextday_items,
-        'job': job
-    }
-
-    # Arama sonuçları varsa ekle
-    if search_date is not None:
-        context['search_date'] = search_date
-
-    return render(request, 'job/list.html', context)
-
-def my_job_list(request):
-    # Kullanıcı bilgilerini tek seferde al
-    today = timezone.now().date()
-    tomorrow = today + timezone.timedelta(days=1)
-    nextday = today + timezone.timedelta(days=2)
-
-    # Kullanıcı kontrolü
-    staff = None
-    company = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-    else:
-        # Personel yoksa boş sayfa göster
-        return render(request, 'job/list.html', {
+        # Context oluştur
+        context = {
             'today': today,
             'tomorrow': tomorrow,
             'nextday': nextday,
-            'today_items': [],
-            'tomorrow_items': [],
-            'nextday_items': []
-        })
+            'today_items': items_by_date[today],
+            'tomorrow_items': items_by_date[tomorrow],
+            'nextday_items': items_by_date[nextday],
+            'search_date': search_date,
+            'job': True
+        }
 
-    # Performans için ilişkili modelleri tek sorguda getir
-    base_query = Operationitem.objects.select_related(
+        return render(request, 'job/list.html', context)
+
+    except Exception as e:
+        messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+
+@login_required(login_url='tour:login')
+def my_job_list(request):
+    # Tarihleri hesapla
+    today = timezone.now().date()
+    tomorrow = today + timezone.timedelta(days=1)
+    nextday = today + timezone.timedelta(days=2)
+    dates = [today, tomorrow, nextday]
+
+    # Kullanıcı ve şirket bilgisini tek sorguda al
+    staff = None
+    company = None
+    if hasattr(request.user, 'personel'):
+        staff = Personel.objects.select_related('company', 'user').filter(user=request.user).first()
+        company = staff.company if staff else None
+
+    # Temel sorgu yapısını oluştur
+    base_query = Operationitem.objects.filter(
+        is_delete=False,
+        is_processed=False,
+        day__operation__follow_staff=staff,
+        day__date__in=dates,
+    ).select_related(
         'day',
         'day__operation',
         'day__operation__follow_staff',
         'day__operation__follow_staff__user',
+        'day__operation__selling_staff',
+        'day__operation__selling_staff__user',
+        'day__operation__buyer_company',
         'tour',
         'transfer',
-        'vehicle'
-    ).filter(day__operation__follow_staff=staff)
-
-    # Arama işlemi
-    search_date = None
-    if request.method == 'POST':
-        start_date = request.POST.get('start_date')
-        end_date = request.POST.get('end_date')
-
-        if start_date:
-            if not end_date:
-                # Tek gün araması
-                search_date = base_query.filter(day__date=start_date).order_by('pick_time')
-            else:
-                # Tarih aralığı araması
-                search_date = base_query.filter(
-                    day__date__range=(start_date, end_date)
-                ).order_by('day__date', 'pick_time')
-
-    # Günlük verileri sorgula
-    today_items = base_query.filter(day__date=today).order_by('pick_time')
-    tomorrow_items = base_query.filter(day__date=tomorrow).order_by('pick_time')
-    nextday_items = base_query.filter(day__date=nextday).order_by('pick_time')
-
-    # Log kaydı oluştur
-    UserActivityLog.objects.create(
-        company=company,
-        staff=staff,
-        action="Kişisel iş listesini görüntüledi",
-        ip_address=get_client_ip(request),
-        browser_info=request.META.get('HTTP_USER_AGENT', '')
+        'vehicle',
+        'supplier',
+        'hotel',
+        'activity',
+        'activity_supplier',
+        'guide'
+    ).prefetch_related(
+        'new_museum',
+        'files'
     )
 
-    # Tek bir context dictionary oluştur
+    if company:
+        base_query = base_query.filter(company=company)
+
+    # Tüm öğeleri tek sorguda al ve hafızada grupla
+    all_items = base_query.order_by('day__date', 'pick_time')
+
+    # Sonuçları hafızada grupla
+    items_by_date = {
+        today: [],
+        tomorrow: [],
+        nextday: []
+    }
+
+    for item in all_items:
+        items_by_date[item.day.date].append(item)
+
+    # Log kaydını oluştur
+    log_data = {
+        'ip_address': get_client_ip(request),
+        'browser_info': request.META.get('HTTP_USER_AGENT', '')
+    }
+
+    if staff:
+        log_data.update({
+            'company': company,
+            'staff': staff,
+            'action': "Günlük iş listesini görüntüledi"
+        })
+    elif request.user.is_superuser:
+        log_data.update({
+            'action': "Süper kullanıcı günlük iş listesini görüntüledi"
+        })
+
+    UserActivityLog.objects.create(**log_data)
+    search_date = None
+
+    # GET metoduyla gelen tarih parametrelerini al
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    try:
+        if start_date:
+            # Tarih aralığı sorgusu için optimize edilmiş sorgu
+            search_query = Operationitem.objects.filter(
+                is_delete=False,
+                day__operation__follow_staff=staff
+            ).select_related(
+                'day',
+                'day__operation',
+                'day__operation__follow_staff',
+                'day__operation__follow_staff__user',
+                'day__operation__selling_staff',
+                'day__operation__selling_staff__user',
+                'day__operation__buyer_company',
+                'tour',
+                'transfer',
+                'vehicle',
+                'supplier',
+                'hotel',
+                'activity',
+                'activity_supplier',
+                'guide'
+            ).prefetch_related(
+                'new_museum',
+                'files'
+            )
+
+            if company:
+                search_query = search_query.filter(company=company)
+
+            if end_date:
+                # Hem başlangıç hem bitiş tarihi varsa
+                search_date = search_query.filter(
+                    day__date__gte=start_date,
+                    day__date__lte=end_date
+                ).order_by('day__date', 'pick_time')
+            else:
+                # Sadece başlangıç tarihi varsa
+                search_date = search_query.filter(
+                    day__date=start_date
+                ).order_by('pick_time')
+
+            if search_date and search_date.exists():
+                # Log kaydı oluştur
+                if staff:
+                    UserActivityLog.objects.create(
+                        company=company,
+                        staff=staff,
+                        action=f"İş listesinde tarih araması yaptı: {start_date} - {end_date or start_date}",
+                        ip_address=get_client_ip(request),
+                        browser_info=request.META.get('HTTP_USER_AGENT', '')
+                    )
+            else:
+                messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
+                search_date = None
+    except Exception as e:
+        messages.error(request, f"TARİH ARAMASINDA HATA OLUŞTU: {str(e)}")
+        search_date = None
+
+    # Context oluştur
     context = {
         'today': today,
         'tomorrow': tomorrow,
         'nextday': nextday,
-        'today_items': today_items,
-        'tomorrow_items': tomorrow_items,
-        'nextday_items': nextday_items,
-        'is_personal': True,  # Kişisel liste gösterimi için bayrak
+        'today_items': items_by_date[today],
+        'tomorrow_items': items_by_date[tomorrow],
+        'nextday_items': items_by_date[nextday],
+        'search_date': search_date,
         'job': True
     }
 
-    # Arama sonuçları varsa ekle
-    if search_date is not None:
-        context['search_date'] = search_date
-
+    # Veriyi cache'le
     return render(request, 'job/list.html', context)
-
 
 def operationitemfile_create(request, pk):
     operation_item = get_object_or_404(Operationitem, pk=pk)
@@ -1958,8 +2280,8 @@ def sms(phone, mesaj):
 
 def cost_calculate():
     import datetime
-    tomorrow = datetime.date.today() - datetime.timedelta(days=1)
-    items = Operationitem.objects.filter(day__date__gte=tomorrow)
+    yesterday = datetime.date.today() - datetime.timedelta(days=1)
+    items = Operationitem.objects.filter(day__date__gte=yesterday)
 
 
     for new_item in items:
@@ -2000,3 +2322,35 @@ def cost_calculate():
                 new_item.vehicle_price = vehicle_cost_map.get(vehicle_type, 0)
 
         new_item.save()
+
+def activity_cost_calculate():
+    import datetime
+    date = datetime.date.today() - datetime.timedelta(days=3)
+    items = Operationitem.objects.filter(day__date__gte=date, activity__isnull=False)
+
+    for new_item in items:
+        if new_item.activity and new_item.manuel_activity_price:
+            new_item.activity_price = new_item.manuel_activity_price
+            new_item.save()
+
+
+
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Oturum bilgisini güncelle
+            messages.success(request, 'Şifreniz başarıyla değiştirildi!')
+            return redirect('tour:dashboard')
+        else:
+            messages.error(request, 'Lütfen hataları düzeltin.')
+    else:
+        form = PasswordChangeForm(request.user)
+
+    return render(request, 'change_password.html', {
+        'form': form,
+        'title': 'Şifre Değiştir'
+    })

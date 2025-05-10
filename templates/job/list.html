@@ -1,21 +1,25 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Günlük İş Listesi{% endblock %}
+{% block title %}GÜNLÜK İŞ LİSTESİ{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
   <!-- Başlık -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4><i class="fas fa-clipboard-list me-2 text-primary"></i>Günlük İş Programı</h4>
+    <h4><i class="fas fa-clipboard-list me-2 text-primary"></i>GÜNLÜK İŞ PROGRAMI</h4>
     <div>
-      <span class="badge bg-primary">Toplam: 
+      {% with today_count=today_items|length tomorrow_count=tomorrow_items|length nextday_count=nextday_items|length %}
+      {% with total_count=today_count|add:tomorrow_count|add:nextday_count %}
+      <span class="badge bg-primary">TOPLAM: 
         {% if search_date %}
-        {{ today_items.count|add:tomorrow_items.count|add:nextday_items.count|add:search_date.count }} Görev
+        {{ total_count|add:search_date.count }} GÖREV
         {% else %}
-            {{ today_items.count|add:tomorrow_items.count|add:nextday_items.count }} Görev
+        {{ total_count }} GÖREV
         {% endif %}
       </span>
+      {% endwith %}
+      {% endwith %}
     </div>
   </div>
 
@@ -24,32 +28,31 @@
     <div class="col-8">
       <ul class="nav nav-tabs mb-4" id="jobTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true">
-                    <i class="fas fa-calendar-day me-1"></i>{{ today|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ today_items.count }}</span>
+                <button class="nav-link active" id="today-tab" data-bs-toggle="tab" data-bs-target="#today" type="button" role="tab" aria-controls="today" aria-selected="true" onclick="activateTab('today')">
+                    <i class="fas fa-calendar-day me-1"></i>{{ today|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ today_items|length }}</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="tomorrow-tab" data-bs-toggle="tab" data-bs-target="#tomorrow" type="button" role="tab" aria-controls="tomorrow" aria-selected="false">
-                    <i class="fas fa-calendar-alt me-1"></i>{{ tomorrow|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ tomorrow_items.count }}</span>
+                <button class="nav-link" id="tomorrow-tab" data-bs-toggle="tab" data-bs-target="#tomorrow" type="button" role="tab" aria-controls="tomorrow" aria-selected="false" onclick="activateTab('tomorrow')">
+                    <i class="fas fa-calendar-alt me-1"></i>{{ tomorrow|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ tomorrow_items|length }}</span>
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="nextday-tab" data-bs-toggle="tab" data-bs-target="#nextday" type="button" role="tab" aria-controls="nextday" aria-selected="false">
-                    <i class="fas fa-calendar-week me-1"></i>{{ nextday|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ nextday_items.count }}</span>
+                <button class="nav-link" id="nextday-tab" data-bs-toggle="tab" data-bs-target="#nextday" type="button" role="tab" aria-controls="nextday" aria-selected="false" onclick="activateTab('nextday')">
+                    <i class="fas fa-calendar-week me-1"></i>{{ nextday|date:"d.m.Y" }} <span class="badge rounded-pill bg-primary ms-1">{{ nextday_items|length }}</span>
                 </button>
             </li>
             {% if search_date %}
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab" aria-controls="search" aria-selected="false">
-                        <i class="fas fa-calendar-day me-1"></i> Arama Sonuçları <span class="badge rounded-pill bg-primary ms-1">{{ search_date.count }}</span>
+                    <button class="nav-link" id="search-tab" data-bs-toggle="tab" data-bs-target="#search" type="button" role="tab" aria-controls="search" aria-selected="false" onclick="activateTab('search')">
+                        <i class="fas fa-calendar-day me-1"></i> ARAMA SONUÇLARI <span class="badge rounded-pill bg-primary ms-1">{{ search_date.count }}</span>
                     </button>
                 </li>
             {% endif %}
       </ul>
     </div>
     <div class="col-4">
-        <form method="post">
-            {% csrf_token %}
+        <form method="GET">
             <div class="d-flex justify-content-end">
                 <input type="date" class="form-control me-2" name="start_date" placeholder="Başlangıç Tarihi">
                 <input type="date" class="form-control me-2" name="end_date" placeholder="Bitiş Tarihi">
@@ -62,11 +65,19 @@
   <!-- Sekmelerin İçeriği -->
   <div class="tab-content" id="jobTabsContent">
     <!-- BUGÜN -->
-    <div class="tab-pane fade {% if not search_date %}show active{% endif %}" id="today" role="tabpanel" aria-labelledby="today-tab">
+    <div class="tab-pane fade {% if not search_date %}show active{% endif %} combined-today" id="today" role="tabpanel" aria-labelledby="today-tab">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light py-3">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ today|date:"d.m.Y" }} - Bugün</h5>
+            <h5 class="mb-0">
+              {% if today_items %}
+                <a href="{% url 'tour:operation_detail' pk=today_items.0.day.operation.id %}" class="text-decoration-none text-dark">
+                  {{ today|date:"d.m.Y" }} - BUGÜN
+                </a>
+              {% else %}
+                {{ today|date:"d.m.Y" }} - BUGÜN
+              {% endif %}
+            </h5>
           </div>
         </div>
         <div class="card-body p-0">
@@ -78,7 +89,7 @@
           {% else %}
             <div class="alert alert-info m-0 border-0 rounded-0 text-center py-5">
               <i class="fas fa-info-circle fa-2x mb-3"></i>
-              <h5>Bugün için planlanmış görev bulunmuyor</h5>
+              <h5>BUGÜN İÇİN PLANLANMIŞ GÖREV BULUNMUYOR</h5>
             </div>
           {% endif %}
         </div>
@@ -86,11 +97,19 @@
     </div>
 
     <!-- YARIN -->
-    <div class="tab-pane fade" id="tomorrow" role="tabpanel" aria-labelledby="tomorrow-tab">
+    <div class="tab-pane fade combined-tomorrow" id="tomorrow" role="tabpanel" aria-labelledby="tomorrow-tab">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light py-3">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ tomorrow|date:"d.m.Y" }} - Yarın</h5>
+            <h5 class="mb-0">
+              {% if tomorrow_items %}
+                <a href="{% url 'tour:operation_detail' pk=tomorrow_items.0.day.operation.id %}" class="text-decoration-none text-dark">
+                  {{ tomorrow|date:"d.m.Y" }} - YARIN
+                </a>
+              {% else %}
+                {{ tomorrow|date:"d.m.Y" }} - YARIN
+              {% endif %}
+            </h5>
           </div>
         </div>
         <div class="card-body p-0">
@@ -102,7 +121,7 @@
           {% else %}
             <div class="alert alert-info m-0 border-0 rounded-0 text-center py-5">
               <i class="fas fa-info-circle fa-2x mb-3"></i>
-              <h5>Yarın için planlanmış görev bulunmuyor</h5>
+              <h5>YARIN İÇİN PLANLANMIŞ GÖREV BULUNMUYOR</h5>
             </div>
           {% endif %}
         </div>
@@ -110,11 +129,19 @@
     </div>
 
     <!-- SONRAKİ GÜN -->
-    <div class="tab-pane fade" id="nextday" role="tabpanel" aria-labelledby="nextday-tab">
+    <div class="tab-pane fade combined-nextday" id="nextday" role="tabpanel" aria-labelledby="nextday-tab">
       <div class="card border-0 shadow-sm">
         <div class="card-header bg-light py-3">
           <div class="d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ nextday|date:"d.m.Y" }} - Sonraki Gün</h5>
+            <h5 class="mb-0">
+              {% if nextday_items %}
+                <a href="{% url 'tour:operation_detail' pk=nextday_items.0.day.operation.id %}" class="text-decoration-none text-dark">
+                  {{ nextday|date:"d.m.Y" }} - SONRAKI GÜN
+                </a>
+              {% else %}
+                {{ nextday|date:"d.m.Y" }} - SONRAKI GÜN
+              {% endif %}
+            </h5>
           </div>
         </div>
         <div class="card-body p-0">
@@ -126,7 +153,7 @@
           {% else %}
             <div class="alert alert-info m-0 border-0 rounded-0 text-center py-5">
               <i class="fas fa-info-circle fa-2x mb-3"></i>
-              <h5>Sonraki gün için planlanmış görev bulunmuyor</h5>
+              <h5>SONRAKI GÜN İÇİN PLANLANMIŞ GÖREV BULUNMUYOR</h5>
             </div>
           {% endif %}
         </div>
@@ -134,13 +161,16 @@
     </div>
 
     {% if search_date %}
-        <div class="tab-pane fade {% if search_date %}show active{% endif %}" id="search" role="tabpanel" aria-labelledby="search-tab">
-            {% for item in search_date %}
-                {% include "operation/partials/item-table.html" %}
-                <hr class="mt-3 text-primary">
-            {% endfor %}
-        </div>
+    <div class="tab-pane fade {% if search_date %}show active{% endif %} combined-search" id="search" role="tabpanel" aria-labelledby="search-tab">
+      {% for item in search_date %}
+          {% include "operation/partials/item-table.html" %}
+          <hr class="mt-3 text-primary">
+      {% endfor %}
+    </div>
     {% endif %}
   </div>
 </div>
 {% endblock %}
+
+
+

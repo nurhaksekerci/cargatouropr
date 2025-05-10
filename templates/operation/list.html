@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Operasyon Listesi{% endblock %}
+{% block title %}OPERASYON LİSTESİ{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
@@ -9,9 +9,9 @@
   <div class="card mb-4 border-0 shadow-sm">
     <div class="card-body">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>Operasyon Listesi</h5>
+        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2 text-primary"></i>OPERASYON LİSTESİ</h5>
         <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
-          <i class="fas fa-filter me-1"></i>Filtreler
+          <i class="fas fa-filter me-1"></i>FİLTRELER
         </button>
       </div>
 
@@ -20,29 +20,29 @@
         <form method="get" action="{% url 'tour:operation_list' %}" class="row g-3 bg-light p-3 rounded">
           <!-- Ay Seçimi -->
           <div class="col-md-3">
-            <label for="month" class="form-label">Ay</label>
+            <label for="month" class="form-label">AY</label>
             <select name="month" id="month" class="form-select">
-              <option value="">Tümü</option>
-              <option value="1" {% if selected_month == '1' %}selected{% endif %}>Ocak</option>
-              <option value="2" {% if selected_month == '2' %}selected{% endif %}>Şubat</option>
-              <option value="3" {% if selected_month == '3' %}selected{% endif %}>Mart</option>
-              <option value="4" {% if selected_month == '4' %}selected{% endif %}>Nisan</option>
-              <option value="5" {% if selected_month == '5' %}selected{% endif %}>Mayıs</option>
-              <option value="6" {% if selected_month == '6' %}selected{% endif %}>Haziran</option>
-              <option value="7" {% if selected_month == '7' %}selected{% endif %}>Temmuz</option>
-              <option value="8" {% if selected_month == '8' %}selected{% endif %}>Ağustos</option>
-              <option value="9" {% if selected_month == '9' %}selected{% endif %}>Eylül</option>
-              <option value="10" {% if selected_month == '10' %}selected{% endif %}>Ekim</option>
-              <option value="11" {% if selected_month == '11' %}selected{% endif %}>Kasım</option>
-              <option value="12" {% if selected_month == '12' %}selected{% endif %}>Aralık</option>
+              <option value="">TÜMÜ</option>
+              <option value="1" {% if selected_month == '1' %}selected{% endif %}>OCAK</option>
+              <option value="2" {% if selected_month == '2' %}selected{% endif %}>ŞUBAT</option>
+              <option value="3" {% if selected_month == '3' %}selected{% endif %}>MART</option>
+              <option value="4" {% if selected_month == '4' %}selected{% endif %}>NİSAN</option>
+              <option value="5" {% if selected_month == '5' %}selected{% endif %}>MAYIS</option>
+              <option value="6" {% if selected_month == '6' %}selected{% endif %}>HAZİRAN</option>
+              <option value="7" {% if selected_month == '7' %}selected{% endif %}>TÜMÜ</option>
+              <option value="8" {% if selected_month == '8' %}selected{% endif %}>AĞUSTOS</option>
+              <option value="9" {% if selected_month == '9' %}selected{% endif %}>EYLÜL</option>
+              <option value="10" {% if selected_month == '10' %}selected{% endif %}>EKİM</option>
+              <option value="11" {% if selected_month == '11' %}selected{% endif %}>KASIM</option>
+              <option value="12" {% if selected_month == '12' %}selected{% endif %}>ARALIK</option>
             </select>
           </div>
           
           <!-- Yıl Seçimi (opsiyonel) -->
           <div class="col-md-3">
-            <label for="year" class="form-label">Yıl</label>
+            <label for="year" class="form-label">YIL</label>
             <select name="year" id="year" class="form-select">
-              <option value="">Tümü</option>
+              <option value="">TÜMÜ</option>
               {% for year in year_list %}
                 <option value="{{ year }}" {% if selected_year == year|stringformat:"i" %}selected{% endif %}>{{ year }}</option>
               {% endfor %}
@@ -51,15 +51,15 @@
 
           <!-- Bilet Numarası -->
           <div class="col-md-3">
-            <label for="ticket" class="form-label">Bilet No</label>
-            <input type="text" class="form-control" id="ticket" name="ticket" value="{{ request.GET.ticket|default:'' }}" placeholder="Bilet numarası">
+            <label for="ticket" class="form-label">OPERASYON KODU</label>
+            <input type="text" class="form-control" id="ticket" name="ticket" value="{{ request.GET.ticket|default:'' }}" placeholder="OPERASYON KODU">
           </div>
 
           <!-- Müşteri Şirketi -->
           <div class="col-md-3">
-            <label for="buyer_company" class="form-label">Müşteri Şirketi</label>
+            <label for="buyer_company" class="form-label">MÜŞTERİ ŞİRKETİ</label>
             <select name="buyer_company" id="buyer_company" class="form-select">
-              <option value="">Tümü</option>
+              <option value="">TÜMÜ</option>
               {% for company in companies %}
                 <option value="{{ company.id }}" {% if request.GET.buyer_company == company.id|stringformat:"i" %}selected{% endif %}>{{ company.name }}</option>
               {% endfor %}
@@ -68,9 +68,9 @@
 
           <!-- Satan Personel -->
           <div class="col-md-3">
-            <label for="selling_staff" class="form-label">Satan Personel</label>
+            <label for="selling_staff" class="form-label">OLUŞTURAN PERSONEL</label>
             <select name="selling_staff" id="selling_staff" class="form-select">
-              <option value="">Tümü</option>
+              <option value="">TÜMÜ</option>
               {% for staff in staffs %}
                 <option value="{{ staff.id }}" {% if request.GET.selling_staff == staff.id|stringformat:"i" %}selected{% endif %}>{{ staff.user.get_full_name }}</option>
               {% endfor %}
@@ -79,9 +79,9 @@
 
           <!-- Takip Eden Personel -->
           <div class="col-md-3">
-            <label for="follow_staff" class="form-label">Takip Eden</label>
+            <label for="follow_staff" class="form-label">TAKİP EDEN PERSONEL</label>
             <select name="follow_staff" id="follow_staff" class="form-select">
-              <option value="">Tümü</option>
+              <option value="">TÜMÜ</option>
               {% for staff in staffs %}
                 <option value="{{ staff.id }}" {% if request.GET.follow_staff == staff.id|stringformat:"i" %}selected{% endif %}>{{ staff.user.get_full_name }}</option>
               {% endfor %}
@@ -90,22 +90,22 @@
 
           <!-- Tarih Aralığı -->
           <div class="col-md-3">
-            <label for="start_date" class="form-label">Başlangıç Tarihi</label>
+            <label for="start_date" class="form-label">BAŞLANGIÇ TARİHİ</label>
             <input type="date" class="form-control" id="start_date" name="start_date" value="{{ request.GET.start_date|default:'' }}">
           </div>
 
           <div class="col-md-3">
-            <label for="end_date" class="form-label">Bitiş Tarihi</label>
+            <label for="end_date" class="form-label">BITİŞ TARİHİ</label>
             <input type="date" class="form-control" id="end_date" name="end_date" value="{{ request.GET.end_date|default:'' }}">
           </div>
 
           <!-- Butonlar -->
           <div class="col-12 d-flex justify-content-end mt-4">
             <a href="{% url 'tour:operation_list' %}" class="btn btn-outline-secondary me-2">
-              <i class="fas fa-undo me-1"></i>Sıfırla
+              <i class="fas fa-undo me-1"></i>SIFIRLA
             </a>
             <button type="submit" class="btn btn-primary">
-              <i class="fas fa-search me-1"></i>Filtrele
+              <i class="fas fa-search me-1"></i>FİLTRELE
             </button>
           </div>
         </form>
@@ -120,7 +120,7 @@
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="mb-0">Toplam Operasyon</h6>
+              <h6 class="mb-0">TOPLAM OPERASYON</h6>
               <h3 class="mb-0 mt-2">{{ operations.count }}</h3>
             </div>
             <div class="rounded-circle bg-white p-3 text-primary">
@@ -135,7 +135,7 @@
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="mb-0">Tamamlanan</h6>
+              <h6 class="mb-0">TAMAMLANAN</h6>
               <h3 class="mb-0 mt-2">{{ completed_count }}</h3>
             </div>
             <div class="rounded-circle bg-white p-3 text-success">
@@ -150,7 +150,7 @@
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="mb-0">Aktif</h6>
+              <h6 class="mb-0">AKTİF</h6>
               <h3 class="mb-0 mt-2">{{ active_count }}</h3>
             </div>
             <div class="rounded-circle bg-white p-3 text-warning">
@@ -165,7 +165,7 @@
         <div class="card-body p-3">
           <div class="d-flex justify-content-between align-items-center">
             <div>
-              <h6 class="mb-0">Gelecek</h6>
+              <h6 class="mb-0">GELECEK</h6>
               <h3 class="mb-0 mt-2">{{ upcoming_count }}</h3>
             </div>
             <div class="rounded-circle bg-white p-3 text-info">
@@ -184,27 +184,27 @@
       <div class="d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
           {% if selected_month %}
-            {% if selected_month == '1' %}Ocak
-            {% elif selected_month == '2' %}Şubat
-            {% elif selected_month == '3' %}Mart
-            {% elif selected_month == '4' %}Nisan
-            {% elif selected_month == '5' %}Mayıs
-            {% elif selected_month == '6' %}Haziran
-            {% elif selected_month == '7' %}Temmuz
-            {% elif selected_month == '8' %}Ağustos
-            {% elif selected_month == '9' %}Eylül
-            {% elif selected_month == '10' %}Ekim
-            {% elif selected_month == '11' %}Kasım
-            {% elif selected_month == '12' %}Aralık
+            {% if selected_month == '1' %}OCAK
+            {% elif selected_month == '2' %}ŞUBAT
+            {% elif selected_month == '3' %}MART
+            {% elif selected_month == '4' %}NİSAN
+            {% elif selected_month == '5' %}MAYIS
+            {% elif selected_month == '6' %}HAZİRAN
+            {% elif selected_month == '7' %}TEMMUZ
+            {% elif selected_month == '8' %}AĞUSTOS
+            {% elif selected_month == '9' %}EYLÜL
+            {% elif selected_month == '10' %}EKİM
+            {% elif selected_month == '11' %}KASIM
+            {% elif selected_month == '12' %}ARALIK
             {% endif %}
             {% if selected_year %} {{ selected_year }}{% endif %}
           {% else %}
-            Tüm Zamanlar
+            TÜM ZAMANLAR
           {% endif %}
         </h5>
         <div>
           <a href="{% url 'tour:operation_create' %}" class="btn btn-sm btn-primary">
-            <i class="fas fa-plus me-1"></i> Yeni Operasyon
+            <i class="fas fa-plus me-1"></i> YENİ OPERASYON
           </a>
         </div>
       </div>
@@ -216,34 +216,34 @@
           <table class="table table-hover align-middle">
             <thead class="table-light">
               <tr>
-                <th>Sıra</th>
-                <th>Grup Kodu</th>
-                <th>Başlangıç</th>
-                <th>Bitiş</th>
-                <th>Satan Personel</th>
-                <th>Takip Eden</th>
-                <th class="text-center">İşlemler</th>
+                <th>SIRA</th>
+                <th>GRUP KODU</th>
+                <th>BAŞLANGIÇ</th>
+                <th>BITİŞ</th>
+                <th>OLUŞTURAN PERSONEL</th>
+                <th>TAKİP EDEN</th>
+                <th class="text-center">İŞLEMLER</th>
               </tr>
             </thead>
             <tbody>
               {% for operation in operations %}
                 <tr>
                   <td class="fw-bold">{{ forloop.counter }}</td>
-                  <td>{{ operation.ticket }}</td>
+                  <td>{{ operation.ticket|upper }}</td>
                   <td>{{ operation.start|date:"d.m.Y" }}</td>
                   <td>{{ operation.finish|date:"d.m.Y" }}</td>
                   <td>
                     {% if operation.selling_staff %}
-                      {{ operation.selling_staff.user.get_full_name }}
+                      {{ operation.selling_staff.user.first_name|upper }} {{ operation.selling_staff.user.last_name|upper }}
                     {% else %}
-                      <span class="text-muted fst-italic">Belirtilmemiş</span>
+                      <span class="text-muted fst-italic">BELİRLİTİLMEMİŞ</span>
                     {% endif %}
                   </td>
                   <td>
                     {% if operation.follow_staff %}
-                      {{ operation.follow_staff.user.get_full_name }}
+                      {{ operation.follow_staff.user.first_name|upper }} {{ operation.follow_staff.user.last_name|upper }}
                     {% else %}
-                      <span class="text-muted fst-italic">Belirtilmemiş</span>
+                      <span class="text-muted fst-italic">BELİRLİTİLMEMİŞ</span>
                     {% endif %}
                   </td>
                   <td class="text-center">
@@ -259,8 +259,8 @@
       {% else %}
         <div class="alert alert-info text-center p-5 m-0 border-0 rounded-0">
           <i class="fas fa-info-circle fa-3x mb-3"></i>
-          <h5 class="mb-3">Arama kriterlerinize uygun operasyon bulunamadı</h5>
-          <p class="mb-0">Filtre kriterlerinizi değiştirmeyi veya yeni bir operasyon oluşturmayı deneyebilirsiniz.</p>
+          <h5 class="mb-3">ARAMA KRİTERLERİNE UYGUN OPERASYON BULUNAMADI</h5>
+          <p class="mb-0">FİLTRE KRİTERLERİNİZİ DEĞİŞTİRMEYİ VE YENİ BİR OPERASYON OLUŞTURMAYI DENEYEBİLİRSİNİZ.</p>
         </div>
       {% endif %}
     </div>
