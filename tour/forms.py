@@ -1,8 +1,8 @@
 from django import forms
 from django.utils.text import slugify
 from .models import (
-    OperationFile, Sirket, Tour, Transfer, Vehicle, Guide, Hotel, 
-    Activity, Museum, Supplier, Activitysupplier, 
+    OperationFile, Sirket, Tour, Transfer, Vehicle, Guide, Hotel,
+    Activity, Museum, Supplier, Activitysupplier,
     Cost, Activitycost, Buyercompany, Personel, Operation,
     Operationitem, Operationday
 )
@@ -21,7 +21,7 @@ class SirketForm(forms.ModelForm):
             'logo': forms.FileInput(attrs={'class': 'form-control'}),
             'statu': forms.Select(attrs={'class': 'form-select'}),
         }
-    
+
     def save(self, commit=True):
         instance = super().save(commit=False)
         if not instance.slug:
@@ -29,7 +29,7 @@ class SirketForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-    
+
     def generate_unique_slug(self, instance):
         original_slug = slugify(instance.name.replace('ı', 'i').replace('İ', 'I'))
         slug = original_slug
@@ -175,33 +175,33 @@ class BuyercompanyForm(forms.ModelForm):
 
 class PersonelForm(forms.ModelForm):
     first_name = forms.CharField(
-        label="Ad", 
-        max_length=30, 
+        label="Ad",
+        max_length=30,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     last_name = forms.CharField(
-        label="Soyad", 
-        max_length=150, 
+        label="Soyad",
+        max_length=150,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     email = forms.EmailField(
-        label="E-posta", 
+        label="E-posta",
         widget=forms.EmailInput(attrs={'class': 'form-control'})
     )
     username = forms.CharField(
-        label="Kullanıcı Adı", 
-        max_length=150, 
+        label="Kullanıcı Adı",
+        max_length=150,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     password1 = forms.CharField(
-        label="Şifre", 
+        label="Şifre",
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
     password2 = forms.CharField(
-        label="Şifre (Tekrar)", 
+        label="Şifre (Tekrar)",
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
-    
+
     class Meta:
         model = Personel
         fields = ['phone', 'gender', 'job', 'is_active']
@@ -211,29 +211,29 @@ class PersonelForm(forms.ModelForm):
             'job': forms.Select(attrs={'class': 'form-select'}),
             'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
-    
+
     def clean_username(self):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError("Bu kullanıcı adı zaten kullanılıyor.")
         return username
-    
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Bu e-posta adresi zaten kullanılıyor.")
         return email
-    
+
     def clean(self):
         cleaned_data = super().clean()
         password1 = cleaned_data.get("password1")
         password2 = cleaned_data.get("password2")
-        
+
         if password1 and password2 and password1 != password2:
             self.add_error('password2', "Şifreler eşleşmiyor.")
-        
+
         return cleaned_data
-    
+
     def save(self, commit=True, company=None):
         # Formdan veriler alınıyor
         first_name = self.cleaned_data.get('first_name')
@@ -241,7 +241,7 @@ class PersonelForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         username = self.cleaned_data.get('username')
         password = self.cleaned_data.get('password1')
-        
+
         # Önce User nesnesi oluşturuluyor
         user = User.objects.create_user(
             username=username,
@@ -250,18 +250,18 @@ class PersonelForm(forms.ModelForm):
             first_name=first_name,
             last_name=last_name
         )
-        
+
         # Sonra Personel nesnesi oluşturuluyor
         personel = super().save(commit=False)
         personel.user = user
-        
+
         # Şirket bilgisi varsa atanıyor
         if company:
             personel.company = company
-        
+
         if commit:
             personel.save()
-        
+
         return personel
 
 class OperationForm(forms.ModelForm):
@@ -284,18 +284,18 @@ class OperationForm(forms.ModelForm):
             'eur_sales_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'rbm_sales_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
-        
+
         if company:
             self.fields['follow_staff'].queryset = Personel.objects.filter(company=company, is_active=True)
             self.fields['buyer_company'].queryset = Buyercompany.objects.filter(company=company, is_delete=False)
         else:
             self.fields['follow_staff'].queryset = Personel.objects.filter(is_active=True)
             self.fields['buyer_company'].queryset = Buyercompany.objects.filter(is_delete=False)
-        
+
         # Tarih alanları için mevcut değerleri uygun formatta ayarla
         if self.instance and self.instance.pk:
             # Eğer bir instance varsa ve veritabanından geliyorsa (pk != None)
@@ -303,33 +303,33 @@ class OperationForm(forms.ModelForm):
                 self.initial['start'] = self.instance.start.strftime('%Y-%m-%d')
             if self.instance.finish:
                 self.initial['finish'] = self.instance.finish.strftime('%Y-%m-%d')
-    
+
     def save(self, commit=True, company=None):
         instance = super().save(commit=False)
-        
+
         # Şirket bilgisi varsa atanıyor
         if company:
             instance.company = company
-        
+
         # Toplam satış fiyatını hesapla
         instance.total_sales_price = (
-            instance.tl_sales_price + 
-            instance.usd_sales_price + 
-            instance.eur_sales_price + 
+            instance.tl_sales_price +
+            instance.usd_sales_price +
+            instance.eur_sales_price +
             instance.rbm_sales_price
         )
-        
+
         # Toplam maliyet fiyatını hesapla
         instance.total_cost_price = (
-            instance.tl_cost_price + 
-            instance.usd_cost_price + 
-            instance.eur_cost_price + 
+            instance.tl_cost_price +
+            instance.usd_cost_price +
+            instance.eur_cost_price +
             instance.rbm_cost_price
         )
-        
+
         if commit:
             instance.save()
-        
+
         return instance
 
 class OperationItemForm(forms.ModelForm):
@@ -340,12 +340,12 @@ class OperationItemForm(forms.ModelForm):
         model = Operationitem
         fields = [
             'operation_type', 'pick_time',
-            'pick_location', 'release_location', 'tour', 'transfer', 
-            'vehicle', 'supplier', 'manuel_vehicle_price', 'driver', 'driver_phone', 'plaka', 
+            'pick_location', 'release_location', 'tour', 'transfer',
+            'vehicle', 'supplier', 'manuel_vehicle_price', 'driver', 'driver_phone', 'plaka',
             'hotel', 'room_type', 'hotel_payment', 'hotel_price', 'hotel_currency',
             'activity', 'activity_supplier', 'activity_payment', 'manuel_activity_price', 'activity_currency',
             'new_museum', 'museum_person', 'museum_payment', 'museum_price', 'museum_currency',
-            'guide', 'guide_price', 'guide_currency', 'guide_var', 'description',
+            'guide', 'guide_price', 'guide_currency', 'guide_var', 'other_price', 'other_currency', 'description',
         ]
         widgets = {
             'operation_type': forms.Select(attrs={'class': 'form-control'}),
@@ -361,7 +361,7 @@ class OperationItemForm(forms.ModelForm):
             'driver_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'plaka': forms.TextInput(attrs={'class': 'form-control'}),
             'hotel': forms.Select(attrs={'class': 'form-control'}),
-            'room_type': forms.TextInput(attrs={'class': 'form-control'}),
+            'room_type': forms.Select(attrs={'class': 'form-control'}),
             'hotel_payment': forms.Select(attrs={'class': 'form-control'}),
             'hotel_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'hotel_currency': forms.Select(attrs={'class': 'form-control'}),
@@ -378,12 +378,14 @@ class OperationItemForm(forms.ModelForm):
             'museum_payment': forms.Select(attrs={'class': 'form-control'}),
             'museum_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'museum_currency': forms.Select(attrs={'class': 'form-control'}),
+            'other_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'other_currency': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         company = kwargs.pop('company', None)
         super().__init__(*args, **kwargs)
-        
+
         if company:
             self.fields['new_museum'].queryset = Museum.objects.filter(company=company, is_delete=False)
             self.fields['vehicle'].queryset = Vehicle.objects.filter(company=company, is_delete=False)

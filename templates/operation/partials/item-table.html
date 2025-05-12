@@ -1,5 +1,11 @@
-
-<table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem; border: 2px solid blue;">
+<table class="table table-bordered table-striped table-hover mb-2" id="item-{{ item.id }}" style="font-size:0.7rem; border: 2px solid blue; width: 100%; overflow-x: hidden;">
+    <style>
+        #item-{{ item.id }} th,
+        #item-{{ item.id }} td {
+            word-break: break-word;
+            white-space: normal;
+        }
+    </style>
     {% if job %}
         <thead class="thead-light">
             <tr>
@@ -76,81 +82,84 @@ Rehber:%20{{ item.guide|upper }}{% endif %}">
     </tbody>
     <thead class="thead-light">
         <tr>
-            <th>İŞLEM TÜRÜ</th>
-            <th>ALIŞ SAATI</th>
-            <th>BIRAKIŞ SAATI</th>
-            <th colspan="2">ALIŞ YERİ</th>
-            <th colspan="2">BIRAKIŞ YERİ</th>
+            <th colspan="3">İŞLEM TÜRÜ</th>
+            <th colspan="3">ALIŞ SAATI</th>
+            <th colspan="4">ALIŞ YERİ</th>
+            <th colspan="4">BIRAKIŞ YERİ</th>
 
-            <th colspan="2">TUR</th>
-            <th colspan="2">TRANSFER</th>
-            <th>ARAÇ</th>
-            <th colspan="2">ARAÇ TEDARİKÇİ</th>
-
-            <th colspan="2">OTEL</th>
-            <th>ODA TÜRÜ</th>
-
-
-            <th>AKTİVİTE</th>
-            <th colspan="2">AKTİVİTE TEDARİKÇİ</th>
-
-            <th colspan="2">MÜZER</th>
-
-            <th colspan="2">REHBER</th>
-            <th colspan="2">ŞOFÖR</th>
-            <th colspan="2">ŞOFÖR TELEFON</th>
-            <th colspan="2">PLAKA</th>
-
+            <th colspan="4">TUR</th>
+            <th colspan="4">TRANSFER</th>
+            <th colspan="4">ARAÇ</th>
+            <th colspan="4">ARAÇ TEDARİKÇİ</th>
         </tr>
     </thead>
     <tbody>
         {% comment %} Transfer tipi için zorunlu alanları kontrol et {% endcomment %}
 
         <tr>
-            <td>{{ item.operation_type|upper }}</td>
+            <td colspan="3">{{ item.operation_type|upper }}</td>
             {% comment %} Alış Saati: Birçok işlem türü için zorunlu {% endcomment %}
-            <td {% if not item.pick_time and item.operation_type == 'Transfer' or not item.pick_time and item.operation_type == 'Tur' or not item.pick_time and item.operation_type == 'TurTransfer' or not item.pick_time and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
-                {{ item.pick_time|time:"H:i" }}
+            <td colspan="3" {% if not item.pick_time and item.operation_type == 'Transfer' or not item.pick_time and item.operation_type == 'Tur' or not item.pick_time and item.operation_type == 'TurTransfer' or not item.pick_time and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
+                {{ item.pick_time|time:"H:i"|default:"----" }}
             </td>
-            <td>{{ item.release_time|upper|time:"H:i" }}</td>
             {% comment %} Alış Yeri: Transfer için zorunlu {% endcomment %}
-            <td colspan="2" {% if not item.pick_location and item.operation_type == 'Transfer' or not item.pick_location and item.operation_type == 'Tur' or not item.pick_location and item.operation_type == 'TurTransfer' or not item.pick_location and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if not item.pick_location and item.operation_type == 'Transfer' or not item.pick_location and item.operation_type == 'Tur' or not item.pick_location and item.operation_type == 'TurTransfer' or not item.pick_location and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.pick_location|upper }}
             </td>
-            <td colspan="2">{{ item.release_location|upper }}</td>
+            <td colspan="4">{{ item.release_location|upper }}</td>
 
-            <td colspan="2" {% if not item.tour and item.operation_type == 'Tur' or not item.tour and item.operation_type == 'TurTransfer' or not item.tour and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if not item.tour and item.operation_type == 'Tur' or not item.tour and item.operation_type == 'TurTransfer' or not item.tour and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.tour|upper|default:"---" }}
             </td>
             {% comment %} Transfer: Transfer için zorunlu {% endcomment %}
-            <td colspan="2" {% if item.operation_type == 'Transfer' and not item.transfer %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if item.operation_type == 'Transfer' and not item.transfer %}class="bg-danger text-white"{% endif %}>
                 {{ item.transfer|upper|default:"----" }}
             </td>
             {% comment %} Araç: Transfer için zorunlu {% endcomment %}
-            <td {% if not item.vehicle and item.operation_type == 'Transfer' or not item.vehicle and item.operation_type == 'Tur' or not item.vehicle and item.operation_type == 'TurTransfer' or not item.vehicle and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if not item.vehicle and item.operation_type == 'Transfer' or not item.vehicle and item.operation_type == 'Tur' or not item.vehicle and item.operation_type == 'TurTransfer' or not item.vehicle and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.vehicle|upper|default:"----" }}
             </td>
             {% comment %} Araç Tedarikçi: Transfer için zorunlu {% endcomment %}
-            <td colspan="2" {% if not item.supplier and item.operation_type == 'Transfer' or not item.supplier and item.operation_type == 'Tur' or not item.supplier and item.operation_type == 'TurTransfer' or not item.supplier and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if not item.supplier and item.operation_type == 'Transfer' or not item.supplier and item.operation_type == 'Tur' or not item.supplier and item.operation_type == 'TurTransfer' or not item.supplier and item.operation_type == 'TransferTur' %}class="bg-danger text-white"{% endif %}>
                 {{ item.supplier|upper|default:"----" }}
             </td>
 
+           
+
+    </tbody>
+    <thead class="thead-light print_dnone">
+        <th colspan="3">OTEL</th>
+        <th colspan="3">ODA TÜRÜ</th>
+
+
+        <th colspan="4">AKTİVİTE</th>
+        <th colspan="4">AKTİVİTE TEDARİKÇİ</th>
+
+        <th colspan="4">MÜZE</th>
+
+        <th colspan="4">REHBER</th>
+        <th colspan="3">ŞOFÖR</th>
+        <th colspan="3">ŞOFÖR TELEFON</th>
+        <th colspan="2">PLAKA</th>
+    </thead>
+    <tbody>
+        <tr>
             {% comment %} Otel: Hotel_payment=Yes ise zorunlu {% endcomment %}
-            <td colspan="2" {% if item.hotel_payment == 'Yes' and not item.hotel %}class="bg-danger text-white"{% endif %}>
+            <td colspan="3" {% if item.hotel_payment == 'Yes' and not item.hotel %}class="bg-danger text-white"{% endif %}>
                 {{ item.hotel|upper|default:"----" }}
             </td>
             {% comment %} Oda Türü: Hotel_payment=Yes ise zorunlu {% endcomment %}
-            <td {% if item.hotel_payment == 'Yes' and not item.room_type %}class="bg-danger text-white"{% endif %}>
+            <td colspan="3" {% if item.hotel_payment == 'Yes' and not item.room_type %}class="bg-danger text-white"{% endif %}>
                 {{ item.get_room_type_display|upper }}
             </td>
 
-            <td {% if item.activity_payment == 'Yes' and not item.activity %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if item.activity_payment == 'Yes' and not item.activity %}class="bg-danger text-white"{% endif %}>
                 {{ item.activity|upper|default:"----" }}
             </td>
-            <td colspan="2" {% if item.activity_payment == 'Yes' and not item.activity_supplier %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if item.activity_payment == 'Yes' and not item.activity_supplier %}class="bg-danger text-white"{% endif %}>
                 {{ item.activity_supplier|upper|default:"----" }}
             </td>
-            <td colspan="2" {% if item.museum_payment == 'Yes' and not item.new_museum.all %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if item.museum_payment == 'Yes' and not item.new_museum.all %}class="bg-danger text-white"{% endif %}>
                 {% if item.new_museum.all %}
                     {% for museum in item.new_museum.all %}
                         {{ forloop.counter }} {{ museum.name|upper }}{% if not forloop.last %}, {% endif %}<br>
@@ -160,15 +169,15 @@ Rehber:%20{{ item.guide|upper }}{% endif %}">
                 {% endif %}
             </td>
             {% comment %} Rehber: guide_var=Yes ise zorunlu {% endcomment %}
-            <td colspan="2" {% if item.guide_var == 'Yes' and not item.guide %}class="bg-danger text-white"{% endif %}>
+            <td colspan="4" {% if item.guide_var == 'Yes' and not item.guide %}class="bg-danger text-white"{% endif %}>
                 {{ item.guide|upper|default:"----" }}
             </td>
             {% comment %} Şoför: Transfer için zorunlu {% endcomment %}
-            <td colspan="2" {% if item.operation_type == 'Transfer' and not item.driver or item.operation_type == 'Tur' and not item.driver or item.operation_type == 'TurTransfer' and not item.driver or item.operation_type == 'TransferTur' and not item.driver %}class="bg-danger text-white"{% endif %}>
+            <td colspan="3" {% if item.operation_type == 'Transfer' and not item.driver or item.operation_type == 'Tur' and not item.driver or item.operation_type == 'TurTransfer' and not item.driver or item.operation_type == 'TransferTur' and not item.driver %}class="bg-danger text-white"{% endif %}>
                 {{ item.driver|upper|default:"----" }}
             </td>
             {% comment %} Şoför Telefon: Transfer için zorunlu {% endcomment %}
-            <td colspan="2" {% if item.operation_type == 'Transfer' and not item.driver_phone or item.operation_type == 'Tur' and not item.driver_phone or item.operation_type == 'TurTransfer' and not item.driver_phone or item.operation_type == 'TransferTur' and not item.driver_phone %}class="bg-danger text-white"{% endif %}>
+            <td colspan="3" {% if item.operation_type == 'Transfer' and not item.driver_phone or item.operation_type == 'Tur' and not item.driver_phone or item.operation_type == 'TurTransfer' and not item.driver_phone or item.operation_type == 'TransferTur' and not item.driver_phone %}class="bg-danger text-white"{% endif %}>
                 {{ item.driver_phone|upper|default:"----" }}
             </td>
             {% comment %} Plaka: Transfer için zorunlu {% endcomment %}
@@ -176,27 +185,21 @@ Rehber:%20{{ item.guide|upper }}{% endif %}">
                 {{ item.plaka|upper|default:"----" }}
             </td>
         </tr>
-
     </tbody>
-        <thead class="thead-light print_dnone">
-        <tr>
+    <thead class="thead-light print_dnone">
+            <tr>
                 <th colspan="3">OTEL ÜCRETLERİ</th>
                 <th colspan="3">REHBER ÜCRETLERİ</th>
-                <th colspan="3">AKTİVİTE ÜCRETLERİ</th>
-                <th colspan="3">MÜZER ÜCRETLERİ</th>
-                <th colspan="2">DİĞER ÜCRETLER</th>
-                <th colspan="2">ARAÇ ÜCRETLERİ</th>
-                <th colspan="2">TOPLAM MALİYET (USD)</th>
-                <th colspan="2">TOPLAM MALİYET (EUR)</th>
-                <th colspan="2">Toplam Maliyet (TL)</th>
-                <th colspan="2">Toplam Maliyet (RBM)</th>
-                <th colspan="2">Otel Ödemesi Bizde</th>
-                <th colspan="2">Aktivite Ödemesi Bizde</th>
-                <th colspan="2">Müze Ödemesi Bizde</th>
+                <th colspan="4">AKTİVİTE ÜCRETLERİ</th>
+                <th colspan="4">MÜZE ÜCRETLERİ</th>
+                <th colspan="4">DİĞER ÜCRETLER</th>
+                <th colspan="4">ARAÇ ÜCRETLERİ</th>
+                <th colspan="3">Otel Bizde</th>
+                <th colspan="3">Aktivite Bizde</th>
+                <th colspan="3">Müze Bizde</th>
 
             </tr>
         </thead>
-
         <tbody class=" print_dnone">
             <tr>
                 {% if hotel_price != 0 and hotel_price != 0.00 %}
@@ -216,35 +219,31 @@ Rehber:%20{{ item.guide|upper }}{% endif %}">
                     <td colspan="3" {% if item.guide_var == 'Yes' %}class="bg-danger text-white"{% endif %}>----</td>
                 {% endif %}
                 {% if activity_price != 0 %}
-                    <td colspan="3">{{ item.activity_price|upper }} {{ item.activity_currency|upper }}</td>
+                    <td colspan="4">{{ item.activity_price|upper }} {{ item.activity_currency|upper }}</td>
                 {% else %}
-                    <td colspan="3">----</td>
+                    <td colspan="4">----</td>
                 {% endif %}
                 {% if museum_price != 0 %}
-                    <td colspan="3">{{ item.museum_price|upper }} {{ item.museum_currency|upper }}</td>
+                    <td colspan="4">{{ item.museum_price|upper }} {{ item.museum_currency|upper }}</td>
                 {% else %}
-                    <td colspan="3">----</td>
+                    <td colspan="4">----</td>
                 {% endif %}
                 {% if other_price != 0 %}
-                    <td colspan="2">{{ item.other_price|upper }} {{ item.other_currency|upper }}</td>
+                    <td colspan="4">{{ item.other_price|upper }} {{ item.other_currency|upper }}</td>
                 {% else %}
-                    <td colspan="2">----</td>
+                    <td colspan="4">----</td>
                 {% endif %}
                 {% if vehicle_price != 0 %}
                     {% comment %} Araç Ücreti: Transfer için zorunlu {% endcomment %}
-                    <td colspan="2" {% if item.operation_type == 'Transfer' and not item.vehicle_price %}class="bg-danger text-white"{% endif %}>
+                    <td colspan="4" {% if item.operation_type == 'Transfer' and not item.vehicle_price %}class="bg-danger text-white"{% endif %}>
                         {{ item.vehicle_price|upper }} {{ item.vehicle_currency|upper }}
                     </td>
                 {% else %}
-                    <td colspan="2" {% if item.operation_type == 'Transfer' %}class="bg-danger text-white"{% endif %}>----</td>
+                    <td colspan="4" {% if item.operation_type == 'Transfer' %}class="bg-danger text-white"{% endif %}>----</td>
                 {% endif %}
-                <td colspan="2">{{ item.usd_cost_price|upper }} </td>
-                <td colspan="2">{{ item.eur_cost_price|upper }} </td>
-                <td colspan="2">{{ item.tl_cost_price|upper }} </td>
-                <td colspan="2">{{ item.rmb_cost_price|upper }} </td>
-                <td colspan="2">{{ item.hotel_payment|upper }} </td>
-                <td colspan="2">{{ item.activity_payment|upper }} </td>
-                <td colspan="2">{{ item.museum_payment|upper }} </td>
+                <td colspan="3">{{ item.hotel_payment|upper }} </td>
+                <td colspan="3">{{ item.activity_payment|upper }} </td>
+                <td colspan="3">{{ item.museum_payment|upper }} </td>
             </tr>
         </tbody>
 

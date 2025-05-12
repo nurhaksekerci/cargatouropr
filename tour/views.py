@@ -1180,7 +1180,15 @@ def my_user_activity_log(request):
             'staff__user'
         ).filter(
             timestamp__gte=son_uc_gun
-        ).order_by('-timestamp')
+        ).only(
+            'action',
+            'timestamp',
+            'ip_address',
+            'browser_info',
+            'company__name',
+            'staff__user__first_name',
+            'staff__user__last_name'
+        )
 
         # Başlık ve sayfa açıklaması
         title = "SON 3 GÜNLÜK KULLANICI AKTİVİTE KAYITLARIM"
@@ -1238,12 +1246,26 @@ def my_user_activity_log(request):
         if not user_activity_logs.exists():
             messages.info(request, "GÖRÜNTÜLENECEK AKTİVİTE KAYDI BULUNAMADI")
 
+        # Toplam kayıt sayısını hesapla
+        total_count = user_activity_logs.count()
+
+        # Sayfalama için kayıtları al
+        page = request.GET.get('page', 1)
+        paginator = Paginator(user_activity_logs, 50)  # Her sayfada 50 kayıt göster
+
+        try:
+            logs = paginator.page(page)
+        except PageNotAnInteger:
+            logs = paginator.page(1)
+        except EmptyPage:
+            logs = paginator.page(paginator.num_pages)
+
         context = {
             'page_title': title,
-            'logs': user_activity_logs[:1000],  # Performans için maksimum 1000 kayıt
-            'is_activity_log': True,  # Şablonda farklı görünüm için
-            'filtre_tarih': son_uc_gun.strftime('%d.%m.%Y'),  # Filtreleme tarihi bilgisi
-            'total_count': user_activity_logs.count()  # Toplam kayıt sayısı
+            'logs': logs,
+            'is_activity_log': True,
+            'filtre_tarih': son_uc_gun.strftime('%d.%m.%Y'),
+            'total_count': total_count
         }
 
         return render(request, 'generic/activity_logs.html', context)
@@ -1252,7 +1274,6 @@ def my_user_activity_log(request):
         logger.error(f"Aktivite log hatası: {str(e)}", exc_info=True)
         messages.error(request, f"AKTİVİTE KAYITLARI GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
         return redirect('tour:dashboard')
-
 
 
 def operation_create(request):
@@ -1516,7 +1537,7 @@ def operationitem_edit(request, pk):
                 new_item.vehicle_price = new_item.manuel_vehicle_price
             elif new_item.manuel_vehicle_price == 0 and new_item.operation_type == "Transfer":
                 if new_item.transfer and new_item.vehicle and new_item.supplier and not new_item.vehicle_price:
-                    cost = Cost.objects.get(transfer=new_item.transfer, supplier=new_item.supplier, is_delete=False, company=new_item.company)
+                    cost = Cost.objects.filter(transfer=new_item.transfer, supplier=new_item.supplier, is_delete=False, company=new_item.company).first()
                     if cost:
                         if new_item.vehicle.vehicle == "BINEK":
                             new_item.vehicle_price = cost.car
@@ -1533,7 +1554,7 @@ def operationitem_edit(request, pk):
             # Maliyet hesaplaması
             elif new_item.manuel_vehicle_price == 0 and (new_item.operation_type == "Tur" or new_item.manuel_vehicle_price == 0 and new_item.operation_type == "TurTransfer" or new_item.manuel_vehicle_price == 0 and new_item.operation_type == "TransferTur"):
                 if new_item.tour and new_item.vehicle and new_item.supplier and not new_item.vehicle_price:
-                    cost = Cost.objects.get(tour=new_item.tour, supplier=new_item.supplier, is_delete=False, company=new_item.company)
+                    cost = Cost.objects.filter(tour=new_item.tour, supplier=new_item.supplier, is_delete=False, company=new_item.company).first()
                     if cost:
                         if new_item.vehicle.vehicle == "BINEK":
                             new_item.vehicle_price = cost.car
