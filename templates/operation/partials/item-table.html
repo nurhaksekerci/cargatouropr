@@ -69,9 +69,13 @@ Rehber:%20{{ item.guide|upper }}{% endif %}">
                 <button type="button" hx-get="{% url 'tour:operationitem_edit' item.id %}" hx-target="#item-{{ item.id }}" hx-swap="outerHTML" class="btn btn-sm btn-primary" title="Düzenle">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <button type="button" class="btn btn-sm btn-danger" title="Sil">
-                    <i class="bi bi-trash"></i>
-                </button>
+                <a href="{% url 'tour:operationitem_toggle' item.id %}?next={{ request.path }}" class="btn btn-sm {% if item.is_delete %}btn-success{% else %}btn-danger{% endif %}" {% if item.is_delete %}title="Geri Yükle"{% else %}title="Sil"{% endif %}>
+                    {% if item.is_delete %}
+                        <i class="bi bi-trash"></i>
+                    {% else %}
+                        <i class="bi bi-trash-fill"></i>
+                    {% endif %}
+                </a>
             </th>
         </tr>
     </thead>

@@ -8,6 +8,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.contenttypes.models import ContentType
 from .models import *
 from .forms import *
 from django.contrib.auth.models import User
@@ -20,73 +21,64 @@ import logging
 from django.contrib.auth.forms import PasswordChangeForm
 from django.db.models import Prefetch
 from django.db.models.functions import ExtractYear
+from .utils import (
+    apply_item_filters, get_client_ip, get_deleted_items_query, get_operation_log_message, normalize_phone_number, save_operation_form, send_sms,
+    generate_sms_code, toggle_operation_day, toggle_operation_item, update_item_costs, validate_password, create_activity_log,
+    get_user_company_info, get_model_and_form, get_model_fields_for_search,
+    get_object_details, get_select_related_fields, get_filtered_queryset,
+    get_base_activity_log_query, get_user_activity_logs, paginate_activity_logs,
+    get_operation_with_relations, get_operation_detail_data, get_operation_detail_log_message,
+    save_operation_edit_form, get_operation_edit_log_message, calculate_vehicle_price, send_operation_sms,
+    save_operation_day_item, get_operation_day_log_message,
+    get_operation_list_filters, get_operation_list_stats, get_operation_list_year_list, get_operation_list_context,
+    get_job_list_dates, get_job_list_base_query, get_job_list_search_query, get_job_list_context,
+    create_job_list_log, save_operation_file_form, get_operation_file_partial_template, get_operation_file_context_data,
+    get_operation_file_template, get_operation_file_context,
+    toggle_operation, toggle_operation_item,
+    get_operation_toggle_log_message, get_operation_item_toggle_log_message,
+    get_operation_day_toggle_log_message
+)
 
 
 logger = logging.getLogger(__name__)
 
 # Create your views here.
 
+
 def login_view(request):
-    """
-    Kullanıcı giriş işlemi için view fonksiyonu.
-
-    Args:
-        request: Django HTTP request
-
-    Returns:
-        Başarılı girişte ana sayfaya, başarısız girişte login sayfasına yönlendirir
-    """
-    # Kullanıcı zaten giriş yapmışsa ana sayfaya yönlendir
     if request.user.is_authenticated:
         return redirect('tour:dashboard')
 
-    # Form gönderildiğinde
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
 
-        # Kullanıcı adı ve şifre kontrolü
         if username and password:
             user = authenticate(request, username=username, password=password)
 
-            # Giriş başarılıysa
             if user is not None:
                 login(request, user)
+                personel, company = get_user_company_info(user)
 
-                # Kullanıcı bir şirketle ilişkilendirilmiş mi kontrol et
-                company = None
-                if hasattr(user, 'personel') and user.personel.exists():
-                    personel = user.personel.first()
-                    company = personel.company
+                if personel and company:
                     messages.success(request, f"HOŞGELDİNİZ, {user.get_full_name().upper()}")
-
-                    # Kullanıcı giriş logunu oluştur
-                    UserActivityLog.objects.create(
+                    create_activity_log(
                         company=company,
                         staff=personel,
                         action=f"Kullanıcı giriş yaptı: {user.username}",
-                        ip_address=get_client_ip(request),
-                        browser_info=request.META.get('HTTP_USER_AGENT', '')
+                        request=request
                     )
                 elif user.is_superuser:
                     messages.success(request, f"HOŞGELDİNİZ, {user.get_full_name().upper()}")
-
-                    # Süper kullanıcı giriş logunu oluştur
-                    UserActivityLog.objects.create(
+                    create_activity_log(
                         action=f"Süper kullanıcı giriş yaptı: {user.username}",
-                        ip_address=get_client_ip(request),
-                        browser_info=request.META.get('HTTP_USER_AGENT', '')
+                        request=request
                     )
                 else:
                     messages.warning(request, "HESABINIZ HERHANGİ BİR ŞİRKETLE İLİŞKİLENDİRİLMEMİŞ!")
 
-                # Kullanıcı daha önce bir sayfaya erişmeye çalışmışsa oraya yönlendir
                 next_url = request.GET.get('next')
-                if next_url:
-                    return redirect(next_url)
-
-                # Varsayılan olarak ana sayfaya yönlendir
-                return redirect('tour:dashboard')
+                return redirect(next_url if next_url else 'tour:dashboard')
             else:
                 messages.error(request, "KULLANICI ADI VEYA ŞİFRE YANLIŞ!")
         else:
@@ -95,62 +87,42 @@ def login_view(request):
     return render(request, 'login.html')
 
 def logout_view(request):
-    """
-    Kullanıcı çıkış işlemi için view fonksiyonu.
-
-    Args:
-        request: Django HTTP request
-
-    Returns:
-        Çıkış sonrası login sayfasına yönlendirir
-    """
-    # Çıkış yapmadan önce log kaydı oluştur
     if request.user.is_authenticated:
-        company = None
-        staff = None
-
-        if hasattr(request.user, 'personel') and request.user.personel.exists():
-            staff = request.user.personel.first()
-            company = staff.company
-
-            # Personel için logout logu
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action=f"Kullanıcı çıkış yaptı: {request.user.username}",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
-        elif request.user.is_superuser:
-            # Süper kullanıcı için logout logu
-            UserActivityLog.objects.create(
-                action=f"Süper kullanıcı çıkış yaptı: {request.user.username}",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
+        personel, company = get_user_company_info(request.user)
+        create_activity_log(
+            company=company,
+            staff=personel,
+            action=f"Kullanıcı çıkış yaptı: {request.user.username}",
+            request=request
+        )
 
     logout(request)
     messages.success(request, "BAŞARIYLA ÇIKIŞ YAPTINIZ!")
     return redirect('tour:login')
 
 def forgot_password(request):
-    """
-    Kullanıcı adına göre şifre sıfırlama işlemini başlatır.
-    """
     if request.method == 'POST':
         username = request.POST.get('username')
         try:
             user = User.objects.get(username=username)
-            # SMS kodunu oluştur ve cache'e kaydet
             sms_code = generate_sms_code()
             cache_key = f'password_reset_{username}'
-            cache.set(cache_key, sms_code, timeout=300)  # 5 dakika geçerli
+            cache.set(cache_key, sms_code, timeout=300)
 
-            # SMS gönder
             try:
-                send_sms_code(user, sms_code)
-                messages.success(request, 'SMS kodu telefonunuza gönderildi.')
-                return redirect('tour:reset_password', username=username)
+                personel, _ = get_user_company_info(user)
+                if not personel:
+                    raise Exception("Kullanıcı personel bilgisi bulunamadı")
+                    
+                message = f"Sayın {user.get_full_name().upper()}, Şifre sıfırlama kodunuz: {sms_code}"
+                success, _ = send_sms(normalize_phone_number(personel.phone), message)
+                
+                if success:
+                    messages.success(request, 'SMS kodu telefonunuza gönderildi.')
+                    return redirect('tour:reset_password', username=username)
+                else:
+                    raise Exception("SMS gönderilemedi")
+                    
             except Exception as e:
                 logger.error(f"SMS gönderme hatası: {str(e)}")
                 messages.error(request, 'SMS gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
@@ -163,9 +135,6 @@ def forgot_password(request):
     return render(request, 'forgot_password.html', {'user_found': False})
 
 def reset_password(request, username):
-    """
-    SMS kodu doğrulaması ve şifre sıfırlama işlemini gerçekleştirir.
-    """
     try:
         user = User.objects.get(username=username)
         cache_key = f'password_reset_{username}'
@@ -176,20 +145,16 @@ def reset_password(request, username):
             new_password = request.POST.get('new_password')
             confirm_password = request.POST.get('confirm_password')
 
-            # SMS kodu kontrolü
             if not stored_code or user_code != stored_code:
                 messages.error(request, 'Geçersiz veya süresi dolmuş SMS kodu!')
                 return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
 
-            # Şifre kontrolü
             if not validate_password(request, new_password, confirm_password):
                 return render(request, 'forgot_password.html', {'user_found': True, 'username': username})
 
-            # Şifreyi güncelle
             try:
                 user.set_password(new_password)
                 user.save()
-                # Cache'den kodu temizle
                 cache.delete(cache_key)
                 messages.success(request, 'Şifreniz başarıyla güncellendi!')
                 return redirect('tour:login')
@@ -206,2156 +171,7 @@ def reset_password(request, username):
         logger.error(f"Şifre sıfırlama hatası: {str(e)}")
         messages.error(request, 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
         return redirect('tour:forgot_password')
-
-def generate_sms_code():
-    """
-    6 haneli rastgele SMS kodu oluşturur.
-    """
-    return str(random.randint(100000, 999999))
-
-def send_sms_code(user, code):
-    """
-    Kullanıcıya SMS kodu gönderir.
-    """
-    try:
-        phone = user.personel.first().phone
-        message = f"Sayın {user.get_full_name().upper()}, Şifre sıfırlama kodunuz: {code}"
-        sms(normalize_phone_number(phone), message)
-    except Exception as e:
-        logger.error(f"SMS gönderme hatası: {str(e)}")
-        raise
-
-def validate_password(request, new_password, confirm_password):
-    """
-    Şifre doğrulama kurallarını kontrol eder.
-    """
-    if new_password != confirm_password:
-        messages.error(request, 'Şifreler eşleşmiyor!')
-        return False
-
-    if len(new_password) < 8:
-        messages.error(request, 'Şifre en az 8 karakter olmalıdır!')
-        return False
-
-    if not any(char.isdigit() for char in new_password):
-        messages.error(request, 'Şifre en az bir rakam içermelidir!')
-        return False
-
-    if not any(char.isupper() for char in new_password):
-        messages.error(request, 'Şifre en az bir büyük harf içermelidir!')
-        return False
-
-    return True
-
-@login_required(login_url='tour:login')
-def dashboard(request):
-    """
-    Kullanıcı dashboard sayfası için view fonksiyonu.
-    Performans için cache kullanır ve veritabanı sorgularını optimize eder.
-
-    Args:
-        request: Django HTTP request
-
-    Returns:
-        Dashboard sayfasını render eder
-    """
-    # Cache anahtarı oluştur
-    cache_key = f"dashboard_{request.user.id}"
-    cache_timeout = 300  # 5 dakika
-
-    # Cache'den veriyi almaya çalış
-    cached_data = cache.get(cache_key)
-    if cached_data:
-        return render(request, 'dashboard.html', cached_data)
-
-    # Kullanıcı ve şirket bilgilerini al
-    company = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        personel = request.user.personel.first()
-        company = personel.company
-
-    # Model listesi ve ilgili filtreler
-    models = {
-        'tours': Tour,
-        'transfers': Transfer,
-        'vehicles': Vehicle,
-        'guides': Guide,
-        'hotels': Hotel,
-        'suppliers': Supplier,
-        'activities': Activity,
-        'activitysuppliers': Activitysupplier,
-        'buyercompanies': Buyercompany
-    }
-
-    # Temel context
-    context = {
-        'user': request.user,
-        'company': company,
-    }
-
-    # Her model için aktif ve silinmiş kayıt sayılarını hesapla
-    for model_name, model in models.items():
-        # Aktif kayıtlar için sorgu
-        active_query = model.objects.filter(is_delete=False)
-        # Silinmiş kayıtlar için sorgu
-        deleted_query = model.objects.filter(is_delete=True)
-
-        # Eğer kullanıcı bir şirkete bağlıysa, şirket filtresini ekle
-        if company and not request.user.is_superuser:
-            active_query = active_query.filter(company=company)
-            deleted_query = deleted_query.filter(company=company)
-
-        # Sayıları hesapla ve context'e ekle
-        context[f'{model_name}_count'] = active_query.count()
-        context[f'deleted_{model_name}_count'] = deleted_query.count()
-
-    # Son aktivite loglarını al (son 5 kayıt)
-    if company and not request.user.is_superuser:
-        recent_logs = UserActivityLog.objects.filter(
-            company=company,
-            staff=personel
-        ).order_by('-timestamp')[:5]
-    else:
-        recent_logs = UserActivityLog.objects.all().order_by('-timestamp')[:5]
-
-    context['recent_logs'] = recent_logs
-
-    # Aktif operasyonları al
-    today = timezone.now().date()
-    if company and not request.user.is_superuser:
-        staff = request.user.personel.first()
-        active_operations = Operation.objects.filter(
-            company=company,
-            is_delete=False,
-            start__lte=today,
-            finish__gte=today,
-            follow_staff=staff
-        ).select_related('buyer_company', 'follow_staff')
-    else:
-        active_operations = None
-
-    context['active_operations'] = active_operations
-
-    # Bugünün iş listesini al
-    if company and not request.user.is_superuser:
-        staff = request.user.personel.first()
-        today_jobs = Operationitem.objects.filter(
-            company=company,
-            day__date=today,
-            day__operation__follow_staff=staff
-        ).select_related(
-            'day',
-            'day__operation',
-            'tour',
-            'transfer',
-            'vehicle',
-            'supplier',
-            'hotel',
-            'activity',
-            'guide'
-        )
-    else:
-        today_jobs = None
-
-    context['today_jobs'] = today_jobs
-
-    # Log kaydı oluştur
-    if company and not request.user.is_superuser:
-        UserActivityLog.objects.create(
-            company=company,
-            staff=personel,
-            action="Dashboard sayfasını ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    else:
-        UserActivityLog.objects.create(
-            action="Süper kullanıcı dashboard sayfasını ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-
-    activity_cost_calculate()
-
-    # Context'i cache'e ekle
-    cache.set(cache_key, context, cache_timeout)
-    return render(request, 'dashboard.html', context)
-
-@login_required(login_url='tour:login')
-def generic_list(request, model_name):
-    """
-    Generic view function that lists objects from a specified model.
-    Optimized for faster loading with database query optimization.
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to list objects from
-
-    Returns:
-        Rendered template with model objects
-    """
-    # Model adı ve model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in model_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Model sınıfını al
-    model = model_map[model_name.lower()]
-
-    # Arama sorgusu
-    query = request.GET.get('q')
-
-    # Cache anahtarı oluştur - kullanıcı ve model adına göre
-    cache_key = f"generic_list_{model_name}_{request.user.id}"
-    cache_timeout = 180  # 3 dakika
-
-    # Eğer arama yapılmıyorsa cache'den veri getirmeyi dene
-    if not query:
-        cached_data = cache.get(cache_key)
-        if cached_data:
-            # Log kaydı oluştur
-            _create_list_view_log(request, model._meta)
-            return render(request, 'generic/list.html', cached_data)
-
-    # Modele özgü select_related ve prefetch_related ayarları
-    select_related_fields = []
-    prefetch_related_fields = []
-
-    # Model bazlı ilişkileri belirle
-    if model_name == 'tour' or model_name == 'transfer' or model_name == 'vehicle' or \
-       model_name == 'activity' or model_name == 'museum' or model_name == 'supplier' or \
-       model_name == 'activitysupplier' or model_name == 'buyercompany' or model_name == 'personel':
-        select_related_fields.append('company')
-
-    if model_name == 'personel':
-        select_related_fields.append('user')
-
-    if model_name == 'cost':
-        select_related_fields.extend(['company', 'supplier', 'tour', 'transfer'])
-
-    if model_name == 'activitycost':
-        select_related_fields.extend(['company', 'supplier', 'activity'])
-
-    # QuerySet oluştur ve ilişkili alanları ekle
-    base_queryset = model.objects.filter(is_delete=False)
-
-    # select_related ekle (foreign keys)
-    if select_related_fields:
-        base_queryset = base_queryset.select_related(*select_related_fields)
-
-    # prefetch_related ekle (many-to-many veya reverse relations)
-    if prefetch_related_fields:
-        base_queryset = base_queryset.prefetch_related(*prefetch_related_fields)
-
-    # Eğer kullanıcı bir şirket personeli ise, sadece kendi şirketinin verilerini göster
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        personel = request.user.personel.first()
-        company = personel.company
-        queryset = base_queryset.filter(company=company)
-    else:
-        # Admin için tüm kayıtları getir
-        queryset = base_queryset
-
-    # Arama işlemi
-    if query:
-        # Model alanlarını al
-        search_fields = []
-        for field in model._meta.fields:
-            # Sadece metin tabanlı alanları ekle
-            if field.get_internal_type() in ['CharField', 'TextField']:
-                search_fields.append(field.name)
-
-        # Dinamik Q nesnesi oluştur
-        if search_fields:
-            q_objects = Q()
-            for field in search_fields:
-                q_objects |= Q(**{f"{field}__icontains": query})
-
-            queryset = queryset.filter(q_objects)
-
-    # Veritabanından veriyi al (deferred loading kullanma)
-    objects = list(queryset)
-
-    # Şablona göndereceğimiz context
-    context = {
-        'objects': objects,
-        'model_name': model_name,
-        'model_verbose_name': model._meta.verbose_name,
-        'model_verbose_name_plural': model._meta.verbose_name_plural,
-        'query': query,  # Arama sorgusunu context'e ekle
-    }
-
-    # Log kaydı oluştur
-    _create_list_view_log(request, model._meta)
-
-    # Önbelleğe al (sadece arama yapılmıyorsa)
-    if not query:
-        cache.set(cache_key, context, cache_timeout)
-
-    # Generic template kullan
-    return render(request, 'generic/list.html', context)
-
-def _create_list_view_log(request, model_meta):
-    """
-    Liste görüntüleme logları için yardımcı fonksiyon
-    """
-    company = None
-    staff = None
-
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-
-        # Personel için log kaydı
-        UserActivityLog.objects.create(
-            company=company,
-            staff=staff,
-            action=f"{model_meta.verbose_name_plural} listesini ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    elif request.user.is_superuser:
-        # Süper kullanıcı için log kaydı
-        UserActivityLog.objects.create(
-            action=f"Süper kullanıcı {model_meta.verbose_name_plural} listesini ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-
-@login_required(login_url='tour:login')
-def generic_create(request, model_name):
-    """
-    Generic view function for creating objects of a specified model.
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to create an object for
-
-    Returns:
-        Rendered form template or redirect to list view on success
-    """
-    # Form sınıfı eşleştirmesi
-    form_map = {
-        'sirket': SirketForm,
-        'tour': TourForm,
-        'transfer': TransferForm,
-        'vehicle': VehicleForm,
-        'guide': GuideForm,
-        'hotel': HotelForm,
-        'activity': ActivityForm,
-        'museum': MuseumForm,
-        'supplier': SupplierForm,
-        'activitysupplier': ActivitysupplierForm,
-        'cost': CostForm,
-        'activitycost': ActivitycostForm,
-        'buyercompany': BuyercompanyForm,
-        'personel': PersonelForm,
-    }
-
-    # Model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in form_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Form ve model sınıflarını al
-    FormClass = form_map[model_name.lower()]
-    Model = model_map[model_name.lower()]
-
-    # Kullanıcı şirket bilgisi al
-    company = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        if request.user.personel.first().company:
-            company = request.user.personel.first().company
-    elif request.user.is_superuser:
-        company = Sirket.objects.get(id=1)
-
-    # POST isteği ise formu işle
-    if request.method == 'POST':
-        form = FormClass(request.POST, request.FILES)
-        if form.is_valid():
-            # Personel formu özel işlem gerektiriyor
-            if model_name.lower() == 'personel':
-                instance = form.save(commit=True, company=company)
-            else:
-                instance = form.save(commit=False)
-                # Şirket bilgisi gerekiyorsa ve kullanıcı bir şirkete bağlıysa
-                if hasattr(Model, 'company') and company:
-                    instance.company = company
-                instance.save()
-
-            # Kayıt oluşturma log kaydını ekle
-            staff = None
-            if hasattr(request.user, 'personel') and request.user.personel.exists():
-                staff = request.user.personel.first()
-
-                # Personel için log kaydı
-                log_action = f"{Model._meta.verbose_name} oluşturdu. Detaylar: "
-
-                # Model alanlarına göre detay bilgileri ekle
-                for field in Model._meta.fields:
-                    if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                        field_value = getattr(instance, field.name)
-                        if field_value is not None:
-                            log_action += f"{field.verbose_name}: {field_value}, "
-
-                # Son virgülü kaldır
-                log_action = log_action.rstrip(', ')
-
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                # Süper kullanıcı için log kaydı
-                log_action = f"Süper kullanıcı {Model._meta.verbose_name} oluşturdu. Detaylar: "
-
-                # Model alanlarına göre detay bilgileri ekle
-                for field in Model._meta.fields:
-                    if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                        field_value = getattr(instance, field.name)
-                        if field_value is not None:
-                            log_action += f"{field.verbose_name}: {field_value}, "
-
-                # Son virgülü kaldır
-                log_action = log_action.rstrip(', ')
-
-                UserActivityLog.objects.create(
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-
-            # Başarı mesajı
-            messages.success(
-                request,
-                f"{Model._meta.verbose_name} başarıyla oluşturuldu."
-            )
-
-            # Liste sayfasına yönlendir
-            return redirect('tour:' + model_name.lower() + '_list')
-    else:
-        # GET isteği ise boş form görüntüle
-        form = FormClass()
-
-    # Şablona göndereceğimiz context
-    context = {
-        'form': form,
-        'model_name': model_name,
-        'model_verbose_name': Model._meta.verbose_name,
-        'form_action': 'Oluştur',
-        'is_create': True
-    }
-
-    # Generic template kullan
-    return render(request, 'generic/form.html', context)
-
-@login_required(login_url='tour:login')
-def generic_update(request, model_name, pk):
-    """
-    Generic view function that updates an object from a specified model.
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to update an object from
-        pk: Primary key of the object to update
-
-    Returns:
-        Rendered form template or redirects to the list view on success
-    """
-    # Model adı ve model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Form adı ve form sınıfı eşleştirmesi
-    form_map = {
-        'sirket': SirketForm,
-        'tour': TourForm,
-        'transfer': TransferForm,
-        'vehicle': VehicleForm,
-        'guide': GuideForm,
-        'hotel': HotelForm,
-        'activity': ActivityForm,
-        'museum': MuseumForm,
-        'supplier': SupplierForm,
-        'activitysupplier': ActivitysupplierForm,
-        'cost': CostForm,
-        'activitycost': ActivitycostForm,
-        'buyercompany': BuyercompanyForm,
-        'personel': PersonelForm,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in model_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Model ve form sınıflarını al
-    model = model_map[model_name.lower()]
-    form_class = form_map[model_name.lower()]
-
-    # Nesneyi veritabanından al
-    try:
-        obj = get_object_or_404(model, pk=pk)
-    except:
-        messages.error(request, f"{model._meta.verbose_name} bulunamadı.")
-        return redirect('tour:' + model_name.lower() + '_list')
-
-    # Form görüntüleme ve işleme
-    if request.method == 'POST':
-        form = form_class(request.POST, request.FILES, instance=obj)
-        if form.is_valid():
-            # Değişiklikten önce mevcut veriyi kaydet (karşılaştırma için)
-            old_data = {}
-            for field in model._meta.fields:
-                if field.name not in ['id', 'updated_at', 'is_delete']:
-                    old_data[field.name] = getattr(obj, field.name)
-
-            # Formu kaydet
-            updated_instance = form.save()
-
-            # Güncellenmiş nesne için log oluştur
-            staff = None
-            company = None
-
-            if hasattr(request.user, 'personel') and request.user.personel.exists():
-                staff = request.user.personel.first()
-                company = staff.company
-
-                # Personel için log kaydı
-                log_action = f"{model._meta.verbose_name} güncelledi. Detaylar: "
-
-                # Değişiklik olan alanları belirle
-                for field in model._meta.fields:
-                    if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                        old_value = old_data.get(field.name)
-                        new_value = getattr(updated_instance, field.name)
-
-                        # Değişiklik varsa loga ekle
-                        if old_value != new_value:
-                            log_action += f"{field.verbose_name}: {old_value} -> {new_value}, "
-
-                # Son virgülü kaldır
-                log_action = log_action.rstrip(', ')
-
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                # Süper kullanıcı için log kaydı
-                log_action = f"Süper kullanıcı {model._meta.verbose_name} güncelledi. Detaylar: "
-
-                # Değişiklik olan alanları belirle
-                for field in model._meta.fields:
-                    if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                        old_value = old_data.get(field.name)
-                        new_value = getattr(updated_instance, field.name)
-
-                        # Değişiklik varsa loga ekle
-                        if old_value != new_value:
-                            log_action += f"{field.verbose_name}: {old_value} -> {new_value}, "
-
-                # Son virgülü kaldır
-                log_action = log_action.rstrip(', ')
-
-                UserActivityLog.objects.create(
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-
-            messages.success(request, f"{model._meta.verbose_name} başarıyla güncellendi.")
-            return redirect('tour:' + model_name.lower() + '_list')
-    else:
-        form = form_class(instance=obj)
-
-    # Template değişkenleri
-    context = {
-        'form': form,
-        'model_name': model_name,
-        'model_verbose_name': model._meta.verbose_name,
-        'action': 'Güncelle',
-        'object': obj,
-    }
-
-    return render(request, 'generic/form.html', context)
-
-@login_required(login_url='tour:login')
-def generic_delete(request, model_name, pk):
-    """
-    Generic view function that deletes an object from a specified model.
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to delete an object from
-        pk: Primary key of the object to delete
-
-    Returns:
-        Redirects to the list view
-    """
-    # Model adı ve model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in model_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Model sınıfını al
-    model = model_map[model_name.lower()]
-
-    # Nesneyi veritabanından al
-    try:
-        obj = get_object_or_404(model, pk=pk)
-    except:
-        messages.error(request, f"{model._meta.verbose_name} bulunamadı.")
-        return redirect('tour:' + model_name.lower() + '_list')
-
-    # Nesneyi sil (gerçek silme değil, is_delete=True yap)
-    try:
-        # Silme işleminden önce nesne detaylarını kaydet
-        log_details = ""
-        for field in model._meta.fields:
-            if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                field_value = getattr(obj, field.name)
-                if field_value is not None:
-                    log_details += f"{field.verbose_name}: {field_value}, "
-
-        # Son virgülü kaldır
-        log_details = log_details.rstrip(', ')
-
-        if hasattr(obj, 'is_delete'):
-            obj.is_delete = True
-            obj.save()
-            messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
-
-            # Log kaydı oluştur
-            staff = None
-            company = None
-
-            if hasattr(request.user, 'personel') and request.user.personel.exists():
-                staff = request.user.personel.first()
-                company = staff.company
-
-                # Personel için log kaydı
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"{model._meta.verbose_name} sildi. Detaylar: {log_details}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                # Süper kullanıcı için log kaydı
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı {model._meta.verbose_name} sildi. Detaylar: {log_details}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-        else:
-            # Eğer is_delete alanı yoksa gerçekten sil
-            obj.delete()
-            messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
-
-            # Log kaydı oluştur
-            staff = None
-            company = None
-
-            if hasattr(request.user, 'personel') and request.user.personel.exists():
-                staff = request.user.personel.first()
-                company = staff.company
-
-                # Personel için log kaydı
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"{model._meta.verbose_name} kalıcı olarak sildi. Detaylar: {log_details}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                # Süper kullanıcı için log kaydı
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı {model._meta.verbose_name} kalıcı olarak sildi. Detaylar: {log_details}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-    except Exception as e:
-        messages.error(request, f"Hata oluştu: {str(e)}")
-
-    return redirect('tour:' + model_name.lower() + '_list')
-
-@login_required(login_url='tour:login')
-def generic_deleted_list(request, model_name):
-    """
-    Generic view function that lists deleted objects (is_delete=True) from a specified model.
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to list deleted objects from
-
-    Returns:
-        Rendered template with deleted model objects
-    """
-    # Model adı ve model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in model_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Model sınıfını al
-    model = model_map[model_name.lower()]
-
-    # Arama sorgusu
-    query = request.GET.get('q')
-
-    # Eğer kullanıcı bir şirket personeli ise, sadece kendi şirketinin verilerini göster
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        personel = request.user.personel.first()
-        company = personel.company
-        # is_delete=True olan ve şirkete ait silinmiş kayıtları getir
-        queryset = model.objects.filter(company=company, is_delete=True)
-    else:
-        # Admin için tüm silinmiş kayıtları getir
-        queryset = model.objects.filter(is_delete=True)
-
-    # Arama işlemi
-    if query:
-        # Model alanlarını al
-        search_fields = []
-        for field in model._meta.fields:
-            # Sadece metin tabanlı alanları ekle
-            if field.get_internal_type() in ['CharField', 'TextField']:
-                search_fields.append(field.name)
-
-        # Dinamik Q nesnesi oluştur
-        if search_fields:
-            q_objects = Q()
-            for field in search_fields:
-                q_objects |= Q(**{f"{field}__icontains": query})
-
-            queryset = queryset.filter(q_objects)
-
-    # Şablona göndereceğimiz context
-    context = {
-        'objects': queryset,
-        'model_name': model_name,
-        'model_verbose_name': model._meta.verbose_name,
-        'model_verbose_name_plural': model._meta.verbose_name_plural,
-        'query': query,  # Arama sorgusunu context'e ekle
-        'is_deleted_list': True,  # Silinmiş öğeler listesi olduğunu belirt
-    }
-
-    # Silinmiş liste görüntüleme log kaydı oluştur
-    company = None
-    staff = None
-
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-
-        # Personel için log kaydı
-        UserActivityLog.objects.create(
-            company=company,
-            staff=staff,
-            action=f"Silinmiş {model._meta.verbose_name_plural} listesini ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    elif request.user.is_superuser:
-        # Süper kullanıcı için log kaydı
-        UserActivityLog.objects.create(
-            action=f"Süper kullanıcı silinmiş {model._meta.verbose_name_plural} listesini ziyaret etti",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-
-    # Generic template kullan
-    return render(request, 'generic/deleted_list.html', context)
-
-@login_required(login_url='tour:login')
-def restore_object(request, model_name, pk):
-    """
-    Generic view function that restores a deleted object (sets is_delete=False).
-
-    Args:
-        request: Django HTTP request
-        model_name: String name of the model to restore an object from
-        pk: Primary key of the object to restore
-
-    Returns:
-        Redirects to the deleted items list view
-    """
-    # Model adı ve model sınıfı eşleştirmesi
-    model_map = {
-        'sirket': Sirket,
-        'tour': Tour,
-        'transfer': Transfer,
-        'vehicle': Vehicle,
-        'guide': Guide,
-        'hotel': Hotel,
-        'activity': Activity,
-        'museum': Museum,
-        'supplier': Supplier,
-        'activitysupplier': Activitysupplier,
-        'cost': Cost,
-        'activitycost': Activitycost,
-        'buyercompany': Buyercompany,
-        'personel': Personel,
-    }
-
-    # Model adını kontrol et
-    if model_name.lower() not in model_map:
-        raise Http404(f"Model '{model_name}' bulunamadı")
-
-    # Model sınıfını al
-    model = model_map[model_name.lower()]
-
-    # Nesneyi veritabanından al
-    try:
-        obj = get_object_or_404(model, pk=pk, is_delete=True)
-    except:
-        messages.error(request, f"Silinmiş {model._meta.verbose_name} bulunamadı.")
-        return redirect('tour:' + model_name.lower() + '_deleted_list')
-
-    # Nesneyi geri getir (is_delete=False yap)
-    try:
-        # Geri getirme işleminden önce nesne detaylarını kaydet
-        log_details = ""
-        for field in model._meta.fields:
-            if field.name not in ['id', 'created_at', 'updated_at', 'is_delete']:
-                field_value = getattr(obj, field.name)
-                if field_value is not None:
-                    log_details += f"{field.verbose_name}: {field_value}, "
-
-        # Son virgülü kaldır
-        log_details = log_details.rstrip(', ')
-
-        obj.is_delete = False
-        obj.save()
-
-        # Log kaydı oluştur
-        staff = None
-        company = None
-
-        if hasattr(request.user, 'personel') and request.user.personel.exists():
-            staff = request.user.personel.first()
-            company = staff.company
-
-            # Personel için log kaydı
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action=f"{model._meta.verbose_name} geri getirdi. Detaylar: {log_details}",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
-        elif request.user.is_superuser:
-            # Süper kullanıcı için log kaydı
-            UserActivityLog.objects.create(
-                action=f"Süper kullanıcı {model._meta.verbose_name} geri getirdi. Detaylar: {log_details}",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
-
-        messages.success(request, f"{model._meta.verbose_name} başarıyla geri getirildi.")
-    except Exception as e:
-        messages.error(request, f"Hata oluştu: {str(e)}")
-
-    return redirect('tour:' + model_name.lower() + '_deleted_list')
-
-# Yardımcı fonksiyon: Kullanıcının IP adresini almak için
-def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-
-@login_required(login_url='tour:login')
-def my_user_activity_log(request):
-    """
-    Kullanıcının kendi aktivite kayıtlarını görüntüleyen view fonksiyonu.
-    Son 3 günlük kayıtları gösterir.
-
-    Args:
-        request: Django HTTP request
-
-    Returns:
-        Kullanıcı aktivite loglarını listeleyen sayfayı render eder
-    """
-    try:
-        # Son 3 günlük kayıtları alacak tarih hesaplaması
-        son_uc_gun = timezone.now() - timezone.timedelta(days=3)
-
-        # Temel sorgu yapısını oluştur - ilişkili alanları önceden yükle
-        base_query = UserActivityLog.objects.select_related(
-            'company',
-            'staff',
-            'staff__user'
-        ).filter(
-            timestamp__gte=son_uc_gun
-        ).only(
-            'action',
-            'timestamp',
-            'ip_address',
-            'browser_info',
-            'company__name',
-            'staff__user__first_name',
-            'staff__user__last_name'
-        )
-
-        # Başlık ve sayfa açıklaması
-        title = "SON 3 GÜNLÜK KULLANICI AKTİVİTE KAYITLARIM"
-
-        if hasattr(request.user, 'personel') and request.user.personel.exists():
-            try:
-                # Personelin kendi loglarını getir (son 3 gün)
-                staff = request.user.personel.select_related('company', 'user').first()
-                if not staff:
-                    raise ValueError("Personel bilgisi bulunamadı")
-
-                company = staff.company
-                if not company:
-                    raise ValueError("Şirket bilgisi bulunamadı")
-
-                # Personele özel filtreleme
-                user_activity_logs = base_query.filter(staff=staff)
-
-                # Log oluştur - kullanıcı kendi aktivite kayıtlarını görüntüledi
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action="Son 3 günlük aktivite kayıtlarını görüntüledi",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            except ValueError as ve:
-                messages.warning(request, f"PERSONEL BİLGİSİ HATASI: {str(ve)}")
-                user_activity_logs = UserActivityLog.objects.none()
-            except Exception as e:
-                messages.error(request, f"PERSONEL SORGUSUNDA HATA: {str(e)}")
-                user_activity_logs = UserActivityLog.objects.none()
-
-        elif request.user.is_superuser:
-            try:
-                # Süper kullanıcı tüm kayıtları görüntüleyebilir (son 3 gün)
-                title = "SON 3 GÜNLÜK TÜM KULLANICI AKTİVİTE KAYITLARI"
-                user_activity_logs = base_query
-
-                # Log oluştur - süper kullanıcı tüm aktivite kayıtlarını görüntüledi
-                UserActivityLog.objects.create(
-                    action="Süper kullanıcı son 3 günlük tüm aktivite kayıtlarını görüntüledi",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            except Exception as e:
-                messages.error(request, f"SÜPER KULLANICI SORGUSUNDA HATA: {str(e)}")
-                user_activity_logs = UserActivityLog.objects.none()
-        else:
-            # Personel olmayan kullanıcılar için boş liste döndür
-            user_activity_logs = UserActivityLog.objects.none()
-            messages.warning(request, "HESABINIZ HERHANGİ BİR ŞİRKETLE İLİŞKİLENDİRİLMEMİŞ!")
-
-        # Sorgu sonuçlarını değerlendir
-        if not user_activity_logs.exists():
-            messages.info(request, "GÖRÜNTÜLENECEK AKTİVİTE KAYDI BULUNAMADI")
-
-        # Toplam kayıt sayısını hesapla
-        total_count = user_activity_logs.count()
-
-        # Sayfalama için kayıtları al
-        page = request.GET.get('page', 1)
-        paginator = Paginator(user_activity_logs, 50)  # Her sayfada 50 kayıt göster
-
-        try:
-            logs = paginator.page(page)
-        except PageNotAnInteger:
-            logs = paginator.page(1)
-        except EmptyPage:
-            logs = paginator.page(paginator.num_pages)
-
-        context = {
-            'page_title': title,
-            'logs': logs,
-            'is_activity_log': True,
-            'filtre_tarih': son_uc_gun.strftime('%d.%m.%Y'),
-            'total_count': total_count
-        }
-
-        return render(request, 'generic/activity_logs.html', context)
-
-    except Exception as e:
-        logger.error(f"Aktivite log hatası: {str(e)}", exc_info=True)
-        messages.error(request, f"AKTİVİTE KAYITLARI GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
-        return redirect('tour:dashboard')
-
-
-def operation_create(request):
-    """
-    Yeni bir operasyon oluşturmak için view fonksiyonu
-    """
-    # Kullanıcı şirket bilgisi al
-    company = None
-    staff = None
-
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-    if request.user.is_superuser:
-        company = Sirket.objects.get(id=1)
-
-    if request.method == 'POST':
-        form = OperationForm(request.POST, company=company)
-        if form.is_valid():
-            # Formu kaydet
-            instance = form.save(commit=False)
-            instance.company = company
-            instance.selling_staff = staff
-            instance.save()
-
-            # Operasyon günlerini oluştur
-            finish = instance.finish
-            start = instance.start
-            while start <= finish:
-                Operationday.objects.create(
-                    company=company,
-                    operation=instance,
-                    date=start
-                )
-                start += timezone.timedelta(days=1)
-
-            # Log kaydı oluştur
-            if staff:
-                # Personel için log kaydı
-                log_action = f"Yeni operasyon oluşturdu: {instance.ticket} (#{instance.buyer_company.name})"
-
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                # Süper kullanıcı için log kaydı
-                log_action = f"Süper kullanıcı yeni operasyon oluşturdu: {instance.ticket} (#{instance.buyer_company.name})"
-
-                UserActivityLog.objects.create(
-                    action=log_action,
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-
-            messages.success(request, f"Operasyon başarıyla oluşturuldu: {instance.ticket} (#{instance.buyer_company.name})")
-            return redirect('tour:operation_detail', pk=instance.id)  # İşlem sonrası yönlendirme
-    else:
-        form = OperationForm(company=company)
-
-    return render(request, 'operation/create.html', {'form': form})
-
-
-@login_required(login_url='tour:login')
-def operation_detail(request, pk):
-    """
-    Operasyon detaylarını görüntülemek için view fonksiyonu.
-    Performans için gerekli tüm öğeler önceden alınır ve ilişkisel sorgular optimize edilir.
-    """
-    # Cache anahtarı oluştur - kullanıcı ve operasyon ID'sine göre
-    cache_key = f"operation_detail_{pk}_{request.user.id}"
-    # Cacheden veriyi almaya çalış
-    cached_data = cache.get(cache_key)
-
-    # Eğer cache'de veri varsa, direkt olarak context'i döndür
-    if cached_data:
-        return render(request, 'operation/detail.html', cached_data)
-
-    # Cache'de veri yoksa, veritabanından çek
-    # select_related ile ilişkili modelleri tek sorguda getir
-    operation = get_object_or_404(
-        Operation.objects.select_related(
-            'company',
-            'selling_staff',
-            'follow_staff',
-            'buyer_company'
-        ),
-        pk=pk
-    )
-
-    # prefetch_related ile alt nesneleri ön belleğe al
-    days = Operationday.objects.filter(operation=operation).order_by('day_number')
-
-    # İlişkili tüm modelleri tek sorguda getir
-    items = Operationitem.objects.filter(
-        day__in=days
-    ).select_related(
-        'day',
-        'tour',
-        'transfer',
-        'vehicle',
-        'supplier',
-        'hotel',
-        'activity',
-        'activity_supplier',
-        'guide'
-    ).order_by('day__day_number', 'pick_time')
-
-    # Aktivite log kaydı
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-
-        UserActivityLog.objects.create(
-            company=company,
-            staff=staff,
-            action=f"Operasyon detayı görüntüledi: {operation.ticket}",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-    elif request.user.is_superuser:
-        UserActivityLog.objects.create(
-            action=f"Süper kullanıcı operasyon detayı görüntüledi: {operation.ticket}",
-            ip_address=get_client_ip(request),
-            browser_info=request.META.get('HTTP_USER_AGENT', '')
-        )
-
-    # Öğeleri günlere göre grupla (şablonda daha hızlı erişim için)
-    items_by_day = {}
-    for day in days:
-        items_by_day[day.id] = []
-
-    for item in items:
-        items_by_day[item.day.id].append(item)
-
-    # Context'i oluştur
-    context = {
-        'operation': operation,
-        'days': days,
-        'items': items,
-        'items_by_day': items_by_day,
-    }
-
-    # Context'i cache'e ekle (5 dakika süreyle)
-    cache.set(cache_key, context, 300)  # 300 saniye = 5 dakika
-
-    return render(request, 'operation/detail.html', context)
-
-
-def operation_edit(request, pk):
-    operation = get_object_or_404(Operation, pk=pk)
-    staff = None
-    company = None
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-    if request.method == 'POST':
-        form = OperationForm(request.POST, instance=operation)
-        if form.is_valid():
-            form.save()
-            #Log kaydı oluştur
-            if staff:
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"Operasyon gününde yeni öğe oluşturdu: {operation.ticket}",
-                )
-            elif request.user.is_superuser:
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturdu: {operation.ticket}",
-                )
-            return render(request, 'operation/partials/operation-card.html', {'operation': operation})
-        else:
-            print(form.errors)
-            #Log kaydı oluştur
-            if staff:
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"Operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {operation.ticket}, Hata: {form.errors}",
-                )
-            elif request.user.is_superuser:
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {operation.ticket}, Hata: {form.errors}",
-                )
-    else:
-        form = OperationForm(instance=operation)
-        #Log kaydı oluştur
-        if staff:
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action=f"Operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {operation.ticket}",
-            )
-        elif request.user.is_superuser:
-            UserActivityLog.objects.create(
-                action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {operation.ticket}",
-            )
-
-    return render(request, 'operation/edit.html', {'form': form, 'operation': operation})
-
-
-
-def normalize_phone_number(phone=None):
-    if phone is None:
-        return None
-
-    # Tüm karakterleri temizle (sadece rakamları al)
-    digits = re.sub(r'\D', '', phone)
-
-    # Eğer numara 11 haneli ve 0 ile başlıyorsa, baştaki 0'ı at
-    if len(digits) == 11 and digits.startswith('0'):
-        digits = digits[1:]
-
-    # Eğer numara 12 haneli ve 90 ile başlıyorsa (ülke kodlu), baştaki 90'ı at
-    if len(digits) == 12 and digits.startswith('90'):
-        digits = digits[2:]
-
-    # Son kontrol: Türk cep telefonu numarası 10 haneli olmalı
-    if len(digits) == 10 and digits.startswith('5'):
-        return digits
-    else:
-        return None  # Geçersiz numara
-
-
-def operationitem_edit(request, pk):
-    item = get_object_or_404(Operationitem, pk=pk)
-
-    if item.driver:
-        old_driver = item.driver
-        if item.driver_phone:
-            old_driver_phone = item.driver_phone
-        else:
-            old_driver_phone = None
-    else:
-        old_driver = None
-    old_plaka = item.plaka
-    old_pick_location = item.pick_location
-    old_pick_time = item.pick_time
-
-
-    if  item.guide:
-        old_guide = item.guide
-        if item.guide.phone:
-            old_guide_phone = item.guide.phone
-        else:
-            old_guide_phone = None
-    else:
-        old_guide = None
-
-    form = OperationItemForm(request.POST or None, instance=item)
-    if request.method == 'POST':
-        if form.is_valid():
-            new_item = form.save()
-
-            # Maliyet hesaplaması
-            if new_item.manuel_vehicle_price != 0:
-                new_item.vehicle_price = new_item.manuel_vehicle_price
-            elif new_item.manuel_vehicle_price == 0 and new_item.operation_type == "Transfer":
-                if new_item.transfer and new_item.vehicle and new_item.supplier and not new_item.vehicle_price:
-                    cost = Cost.objects.filter(transfer=new_item.transfer, supplier=new_item.supplier, is_delete=False, company=new_item.company).first()
-                    if cost:
-                        if new_item.vehicle.vehicle == "BINEK":
-                            new_item.vehicle_price = cost.car
-                        elif new_item.vehicle.vehicle == "MINIVAN":
-                            new_item.vehicle_price = cost.minivan
-                        elif new_item.vehicle.vehicle == "MINIBUS":
-                            new_item.vehicle_price = cost.minibus
-                        elif new_item.vehicle.vehicle == "MIDIBUS":
-                            new_item.vehicle_price = cost.midibus
-                        elif new_item.vehicle.vehicle == "OTOBUS":
-                            new_item.vehicle_price = cost.bus
-                    else:
-                        print("Maliyet Bulunamadı")
-            # Maliyet hesaplaması
-            elif new_item.manuel_vehicle_price == 0 and (new_item.operation_type == "Tur" or new_item.manuel_vehicle_price == 0 and new_item.operation_type == "TurTransfer" or new_item.manuel_vehicle_price == 0 and new_item.operation_type == "TransferTur"):
-                if new_item.tour and new_item.vehicle and new_item.supplier and not new_item.vehicle_price:
-                    cost = Cost.objects.filter(tour=new_item.tour, supplier=new_item.supplier, is_delete=False, company=new_item.company).first()
-                    if cost:
-                        if new_item.vehicle.vehicle == "BINEK":
-                            new_item.vehicle_price = cost.car
-                        elif new_item.vehicle.vehicle == "MINIVAN":
-                            new_item.vehicle_price = cost.minivan
-                        elif new_item.vehicle.vehicle == "MINIBUS":
-                            new_item.vehicle_price = cost.minibus
-                        elif new_item.vehicle.vehicle == "MIDIBUS":
-                            new_item.vehicle_price = cost.midibus
-                        elif new_item.vehicle.vehicle == "OTOBUS":
-                            new_item.vehicle_price = cost.bus
-                    else:
-                        print("Maliyet Bulunamadı")
-
-            if new_item.activity and new_item.manuel_activity_price and new_item.activity_price == 0:
-                new_item.activity_price = new_item.manuel_activity_price
-
-            new_item.save()
-
-            if new_item.operation_type == "Transfer":
-                if new_item.transfer and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location:
-                    sms(normalize_phone_number(new_item.driver_phone), f"Sayın {new_item.driver}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı araçla {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere {new_item.transfer.route} Transfer tanımlanmıştır.")
-                    if new_item.guide:
-                        sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.transfer.route} Transfer tanımlanmıştır. Araç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-            if new_item.operation_type == "Tur" or new_item.operation_type == "TurTransfer" or new_item.operation_type == "TransferTur":
-                if new_item.tour and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location:
-                    sms(normalize_phone_number(new_item.driver_phone), f"Sayın {new_item.driver}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı araçla {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere {new_item.tour.route} Tur tanımlanmıştır.")
-                    if new_item.guide:
-                        sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.tour.route} Tur tanımlanmıştır. Araç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-            if new_item.operation_type == "Rehber":
-                if new_item.guide and new_item.tour.route == "WALKING TUR IST" and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                    sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresinde Misafirlerimizle buluşmak üzere {new_item.tour.route} Turu tanımlanmıştır.")
-                elif new_item.guide and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                    sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresinde Misafirlerimizle buluşmak üzere Rehber olarak görev tanımlanmıştır.")
-            if new_item.operation_type == "Aracli Rehber":
-                if new_item.guide and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                    sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere Araçlı Rehber olarak görev tanımlanmıştır.")
-            if old_driver != new_item.driver and old_driver_phone:
-                sms(old_driver_phone, f"Sayın {old_driver}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {old_pick_time} saatindeki işiniz iptal edildi.")
-                if new_item.operation_type == "Transfer":
-                    if new_item.transfer and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location:
-                        sms(normalize_phone_number(new_item.driver_phone), f"Sayın {new_item.driver}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı araçla {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere {new_item.transfer.route} Transfer tanımlanmıştır.")
-                        if new_item.guide:
-                            sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.transfer.route} Transfer tanımlanmıştır. Yeni Araç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-                if new_item.operation_type == "Tur" or new_item.operation_type == "TurTransfer" or new_item.operation_type == "TransferTur":
-                    if new_item.tour and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location:
-                        sms(normalize_phone_number(new_item.driver_phone), f"Sayın {new_item.driver}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı araçla {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere {new_item.tour.route} Tur tanımlanmıştır.")
-                        if new_item.guide:
-                            sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.tour.route} Tur tanımlanmıştır. YeniAraç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-            if old_guide != new_item.guide and old_guide_phone:
-                sms(normalize_phone_number(old_guide_phone), f"Sayın {old_guide}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {old_pick_time} saatindeki işiniz iptal edildi.")
-                if new_item.operation_type == "Transfer":
-                    if new_item.transfer and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location and new_item.guide:
-                        sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.transfer.route} Transfer tanımlanmıştır. Araç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-                if new_item.operation_type == "Tur" or new_item.operation_type == "TurTransfer" or new_item.operation_type == "TransferTur":
-                    if new_item.tour and new_item.vehicle and new_item.pick_time and new_item.supplier and new_item.driver and new_item.driver_phone and new_item.plaka and new_item.day.date >= (timezone.now().date()) and new_item.pick_location and new_item.guide:
-                        sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.plaka} plakalı {new_item.tour.route} Tur tanımlanmıştır. Araç Şoförü: {new_item.driver} Telefon: {new_item.driver_phone}")
-                    if new_item.operation_type == "Rehber":
-                        if new_item.guide and new_item.tour.route == "WALKING TUR IST" and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                            sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresinde Misafirlerimizle buluşmak üzere {new_item.tour.route} Turu tanımlanmıştır.")
-                        elif new_item.guide and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                            sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresinde Misafirlerimizle buluşmak üzere Rehber olarak görev tanımlanmıştır.")
-                    if new_item.operation_type == "Aracli Rehber":
-                        if new_item.guide and new_item.day.date >= (timezone.now().date()) and new_item.pick_time and new_item.pick_location:
-                            sms(normalize_phone_number(new_item.guide.phone), f"Sayın {new_item.guide.name}. {new_item.day.date.strftime('%d.%m.%Y')} tarihinde {new_item.pick_time} saatinde, {new_item.pick_location} adresine Misafirlerimizle buluşmak üzere Araçlı Rehber olarak görev tanımlanmıştır.")
-            return render(request, 'operation/partials/item-table.html', {'item': new_item})
-        else:
-            print(form.errors)
-    else:
-        return render(request, 'operation/item-edit.html', {'form': form, 'item': item})
-
-
-def operation_delete(request, pk):
-    pass
-
-def operationitem_delete(request, pk):
-    pass
-
-
-
-def operationday_item_create(request, day_id):
-    day = get_object_or_404(Operationday, id=day_id)
-    staff = None
-    company = None
-
-    if hasattr(request.user, 'personel') and request.user.personel.exists():
-        staff = request.user.personel.first()
-        company = staff.company
-
-    if request.user.is_superuser:
-        company = Sirket.objects.get(id=1)
-
-    if request.method == 'POST':
-        form = OperationItemForm(request.POST, company=company)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item.day = day
-            item.company = company
-            item.save()
-            form.save_m2m()  # ManyToMany ilişkilerini kaydet
-
-            # Log kaydı oluştur
-            if staff:
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"Operasyon gününde yeni öğe oluşturdu: {item.operation_type}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-            elif request.user.is_superuser:
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturdu: {item.operation_type}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-
-            return render(request, 'operation/partials/item-table.html', {'item': item})
-        else:
-            print(form.errors)
-            #Log kaydı oluştur
-            if staff:
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"Operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {item.operation_type}, {day.date}, {item.id}, Hata: {form.errors}",
-                )
-            elif request.user.is_superuser:
-                UserActivityLog.objects.create(
-                    action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sırasında hata oluştu: {item.operation_type}, {day.date}, {item.id}, Hata: {form.errors}",
-                )
-    else:
-        form = OperationItemForm(company=company)
-        #Log kaydı oluştur
-        if staff:
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action=f"Operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {day.date}",
-            )
-        elif request.user.is_superuser:
-            UserActivityLog.objects.create(
-                action=f"Süper kullanıcı operasyon gününde yeni öğe oluşturma sayfasını ziyaret etti: {day.date}",
-            )
-
-    return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
-
-
-def operation_list(request):
-    """
-    Operasyonları aylara, yıllara ve diğer kriterlere göre listeleyen view fonksiyonu.
-    Performans optimizasyonu yapılmış versiyonu.
-    """
-    try:
-        # Filtre parametrelerini al
-        month = request.GET.get('month', '')
-        year = request.GET.get('year', '')
-        ticket = request.GET.get('ticket', '')
-        buyer_company_id = request.GET.get('buyer_company', '')
-        selling_staff_id = request.GET.get('selling_staff', '')
-        follow_staff_id = request.GET.get('follow_staff', '')
-        start_date = request.GET.get('start_date', '')
-        end_date = request.GET.get('end_date', '')
-
-        # Şirket bilgisini tek sorguda al
-        staff = None
-        company = None
-        if hasattr(request.user, 'personel'):
-            staff = Personel.objects.select_related('company').filter(user=request.user).first()
-            company = staff.company if staff else None
-
-        # Temel sorgu yapısını oluştur - ilişkili alanları önceden yükle
-        base_query = Operation.objects.select_related(
-            'company',
-            'buyer_company',
-            'selling_staff',
-            'selling_staff__user',
-            'follow_staff',
-            'follow_staff__user'
-        ).filter(
-            is_delete=False
-        )
-
-        # Şirket filtrelemesi
-        if company:
-            base_query = base_query.filter(company=company)
-
-        # Tarih hesaplamaları
-        today = timezone.now().date()
-        current_month = today.month
-        current_year = today.year
-
-        # Ay seçilmemişse ve diğer filtreler de yoksa, varsayılan olarak mevcut ayı seç
-        if not any([month, ticket, buyer_company_id, selling_staff_id, follow_staff_id, start_date, end_date]):
-            month = str(current_month)
-            year = str(current_year)
-
-        # Yıl seçilmemişse ve ay seçilmişse, varsayılan olarak mevcut yılı seç
-        if month and not year:
-            year = str(current_year)
-
-        # Filtreleri uygula
-        filters = Q()
-
-        # Ay ve yıl filtresi
-        if month and year:
-            try:
-                month_int = int(month)
-                year_int = int(year)
-
-                # Ay başlangıç ve bitiş tarihleri
-                month_start = timezone.datetime(year_int, month_int, 1).date()
-                if month_int == 12:
-                    month_end = timezone.datetime(year_int + 1, 1, 1).date() - timezone.timedelta(days=1)
-                else:
-                    month_end = timezone.datetime(year_int, month_int + 1, 1).date() - timezone.timedelta(days=1)
-
-                # Operasyonun tarihi, seçilen ay ile kesişiyorsa filtrele
-                filters &= Q(start__lte=month_end) & Q(finish__gte=month_start)
-            except ValueError:
-                messages.error(request, "Geçersiz ay veya yıl değeri!")
-
-        # Diğer filtreleri ekle
-        if ticket:
-            filters &= Q(ticket__icontains=ticket)
-        if buyer_company_id:
-            filters &= Q(buyer_company_id=buyer_company_id)
-        if selling_staff_id:
-            filters &= Q(selling_staff_id=selling_staff_id)
-        if follow_staff_id:
-            filters &= Q(follow_staff_id=follow_staff_id)
-        if start_date:
-            filters &= Q(start__gte=start_date)
-        if end_date:
-            filters &= Q(finish__lte=end_date)
-
-        # Filtreleri uygula ve sonuçları sırala
-        queryset = base_query.filter(filters).order_by('-start')
-
-        # İstatistik bilgileri - tek sorguda hesapla
-        stats = {
-            'completed_count': queryset.filter(finish__lt=today).count(),
-            'active_count': queryset.filter(start__lte=today, finish__gte=today).count(),
-            'upcoming_count': queryset.filter(start__gt=today).count()
-        }
-
-        # Yıl listesini verimli şekilde hesapla
-        year_list = Operation.objects.filter(
-            is_delete=False
-        ).annotate(
-            year=ExtractYear('start')
-        ).values_list(
-            'year', flat=True
-        ).distinct().order_by('year')
-
-        # None değerleri filtrele ve unique yılları al
-        year_list = sorted(set(year for year in year_list if year is not None))
-
-        # Eğer hiç yıl bulunamazsa, mevcut yılı ekle
-        if not year_list:
-            year_list = [current_year]
-
-        # Müşteri şirketlerini ve personel listesini tek sorguda al
-        companies = Buyercompany.objects.filter(
-            is_delete=False,
-            **({"company": company} if company else {})
-        ).only('id', 'name')
-
-        staffs = Personel.objects.filter(
-            is_active=True,
-            **({"company": company} if company else {})
-        ).select_related('user').only('id', 'user__first_name', 'user__last_name')
-
-        # Log kaydı oluştur
-        if staff:
-            UserActivityLog.objects.create(
-                company=company,
-                staff=staff,
-                action=f"Operasyon listesini görüntüledi",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
-        elif request.user.is_superuser:
-            UserActivityLog.objects.create(
-                action=f"Süper kullanıcı operasyon listesini görüntüledi",
-                ip_address=get_client_ip(request),
-                browser_info=request.META.get('HTTP_USER_AGENT', '')
-            )
-
-        # Sonuçları sayfalama
-        paginator = Paginator(queryset, 50)  # Her sayfada 50 kayıt
-        page = request.GET.get('page')
-        try:
-            operations = paginator.page(page)
-        except PageNotAnInteger:
-            operations = paginator.page(1)
-        except EmptyPage:
-            operations = paginator.page(paginator.num_pages)
-
-        context = {
-            'operations': operations,
-            'selected_month': month,
-            'selected_year': year,
-            'year_list': year_list,
-            'companies': companies,
-            'staffs': staffs,
-            **stats,  # İstatistikleri context'e ekle
-            'total_count': queryset.count(),
-            'current_filters': {
-                'month': month,
-                'year': year,
-                'ticket': ticket,
-                'buyer_company_id': buyer_company_id,
-                'selling_staff_id': selling_staff_id,
-                'follow_staff_id': follow_staff_id,
-                'start_date': start_date,
-                'end_date': end_date
-            }
-        }
-
-        return render(request, 'operation/list.html', context)
-
-    except Exception as e:
-        logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
-        messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
-        return redirect('tour:dashboard')
-
-
-@login_required(login_url='tour:login')
-def job_list(request):
-    try:
-        # Tarihleri hesapla
-        today = timezone.now().date()
-        tomorrow = today + timezone.timedelta(days=1)
-        nextday = today + timezone.timedelta(days=2)
-        dates = [today, tomorrow, nextday]
-
-        # Kullanıcı ve şirket bilgisini tek sorguda al
-        staff = None
-        company = None
-        if hasattr(request.user, 'personel'):
-            staff = (Personel.objects
-                    .select_related('company', 'user')
-                    .only('id', 'company__id', 'user__id', 'user__first_name', 'user__last_name')
-                    .filter(user=request.user)
-                    .first())
-            company = staff.company if staff else None
-
-        # Temel sorgu yapısını oluştur ve gerekli alanları seç
-        base_query = (Operationitem.objects
-            .filter(
-                is_delete=False,
-                is_processed=False,
-                day__date__in=dates
-            )
-            .select_related(
-                'day',
-                'day__operation',
-                'day__operation__follow_staff__user',
-                'day__operation__selling_staff__user',
-                'day__operation__buyer_company',
-                'tour',
-                'transfer',
-                'vehicle',
-                'supplier',
-                'hotel',
-                'activity',
-                'activity_supplier',
-                'guide'
-            )
-            .prefetch_related(
-                'new_museum',
-                'files',
-                'day__operation__follow_staff',
-                'day__operation__selling_staff'
-            )
-            .defer(
-                'day__operation__follow_staff__dark_mode',
-                'day__operation__follow_staff__created_at',
-                'day__operation__follow_staff__is_delete',
-                'day__operation__selling_staff__dark_mode',
-                'day__operation__selling_staff__created_at',
-                'day__operation__selling_staff__is_delete',
-                'tour__created_at',
-                'tour__updated_at',
-                'transfer__created_at',
-                'transfer__updated_at',
-                'hotel__mail',
-                'hotel__one_person',
-                'hotel__two_person',
-                'hotel__tree_person',
-                'hotel__finish',
-                'hotel__currency',
-                'guide__doc_no',
-                'guide__phone',
-                'guide__mail',
-                'guide__price',
-                'guide__currency'
-            ))
-
-        if company:
-            base_query = base_query.filter(company=company)
-
-        # Tüm öğeleri tek sorguda al ve hafızada grupla
-        all_items = base_query.order_by('day__date', 'pick_time')
-
-        # Sonuçları hafızada grupla
-        items_by_date = {date: [] for date in dates}
-        for item in all_items:
-            items_by_date[item.day.date].append(item)
-
-        # Log kaydını oluştur
-        log_data = {
-            'ip_address': get_client_ip(request),
-            'browser_info': request.META.get('HTTP_USER_AGENT', ''),
-            'action': "Günlük iş listesini görüntüledi" if staff else "Süper kullanıcı günlük iş listesini görüntüledi",
-            'company': company,
-            'staff': staff
-        }
-        UserActivityLog.objects.create(**log_data)
-
-        # Tarih araması için değişkenler
-        search_date = None
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-
-        if start_date:
-            # Tarih aralığı sorgusu için optimize edilmiş sorgu
-            search_query = (Operationitem.objects
-                .filter(is_delete=False)
-                .select_related(
-                    'day',
-                    'day__operation',
-                    'day__operation__follow_staff__user',
-                    'day__operation__selling_staff__user',
-                    'day__operation__buyer_company',
-                    'tour',
-                    'transfer',
-                    'vehicle',
-                    'supplier',
-                    'hotel',
-                    'activity',
-                    'activity_supplier',
-                    'guide'
-                )
-                .prefetch_related(
-                    'new_museum',
-                    'files',
-                    'day__operation__follow_staff',
-                    'day__operation__selling_staff'
-                )
-                .defer(
-                    'day__operation__follow_staff__dark_mode',
-                    'day__operation__follow_staff__created_at',
-                    'day__operation__follow_staff__is_delete',
-                    'day__operation__selling_staff__dark_mode',
-                    'day__operation__selling_staff__created_at',
-                    'day__operation__selling_staff__is_delete',
-                    'tour__created_at',
-                    'tour__updated_at',
-                    'transfer__created_at',
-                    'transfer__updated_at',
-                    'hotel__mail',
-                    'hotel__one_person',
-                    'hotel__two_person',
-                    'hotel__tree_person',
-                    'hotel__finish',
-                    'hotel__currency',
-                    'guide__doc_no',
-                    'guide__phone',
-                    'guide__mail',
-                    'guide__price',
-                    'guide__currency'
-                ))
-
-            if company:
-                search_query = search_query.filter(company=company)
-            if start_date and end_date:
-                date_filter = {'day__date__gte': start_date}
-                if end_date:
-                    date_filter['day__date__lte'] = end_date
-            elif start_date and not end_date:
-                date_filter = {'day__date' : start_date}
-
-            search_date = search_query.filter(**date_filter).order_by('day__date', 'pick_time')
-
-            if not search_date.exists():
-                messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
-                search_date = None
-            elif staff:
-                UserActivityLog.objects.create(
-                    company=company,
-                    staff=staff,
-                    action=f"İş listesinde tarih araması yaptı: {start_date} - {end_date or start_date}",
-                    ip_address=get_client_ip(request),
-                    browser_info=request.META.get('HTTP_USER_AGENT', '')
-                )
-
-        # Context oluştur
-        context = {
-            'today': today,
-            'tomorrow': tomorrow,
-            'nextday': nextday,
-            'today_items': items_by_date[today],
-            'tomorrow_items': items_by_date[tomorrow],
-            'nextday_items': items_by_date[nextday],
-            'search_date': search_date,
-            'job': True
-        }
-
-        return render(request, 'job/list.html', context)
-
-    except Exception as e:
-        messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
-        return redirect('tour:dashboard')
-
-@login_required(login_url='tour:login')
-def my_job_list(request):
-    # Tarihleri hesapla
-    today = timezone.now().date()
-    tomorrow = today + timezone.timedelta(days=1)
-    nextday = today + timezone.timedelta(days=2)
-    dates = [today, tomorrow, nextday]
-
-    # Kullanıcı ve şirket bilgisini tek sorguda al
-    staff = None
-    company = None
-    if hasattr(request.user, 'personel'):
-        staff = Personel.objects.select_related('company', 'user').filter(user=request.user).first()
-        company = staff.company if staff else None
-
-    # Temel sorgu yapısını oluştur
-    base_query = Operationitem.objects.filter(
-        is_delete=False,
-        is_processed=False,
-        day__operation__follow_staff=staff,
-        day__date__in=dates,
-    ).select_related(
-        'day',
-        'day__operation',
-        'day__operation__follow_staff',
-        'day__operation__follow_staff__user',
-        'day__operation__selling_staff',
-        'day__operation__selling_staff__user',
-        'day__operation__buyer_company',
-        'tour',
-        'transfer',
-        'vehicle',
-        'supplier',
-        'hotel',
-        'activity',
-        'activity_supplier',
-        'guide'
-    ).prefetch_related(
-        'new_museum',
-        'files'
-    )
-
-    if company:
-        base_query = base_query.filter(company=company)
-
-    # Tüm öğeleri tek sorguda al ve hafızada grupla
-    all_items = base_query.order_by('day__date', 'pick_time')
-
-    # Sonuçları hafızada grupla
-    items_by_date = {
-        today: [],
-        tomorrow: [],
-        nextday: []
-    }
-
-    for item in all_items:
-        items_by_date[item.day.date].append(item)
-
-    # Log kaydını oluştur
-    log_data = {
-        'ip_address': get_client_ip(request),
-        'browser_info': request.META.get('HTTP_USER_AGENT', '')
-    }
-
-    if staff:
-        log_data.update({
-            'company': company,
-            'staff': staff,
-            'action': "Günlük iş listesini görüntüledi"
-        })
-    elif request.user.is_superuser:
-        log_data.update({
-            'action': "Süper kullanıcı günlük iş listesini görüntüledi"
-        })
-
-    UserActivityLog.objects.create(**log_data)
-    search_date = None
-
-    # GET metoduyla gelen tarih parametrelerini al
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-
-    try:
-        if start_date:
-            # Tarih aralığı sorgusu için optimize edilmiş sorgu
-            search_query = Operationitem.objects.filter(
-                is_delete=False,
-                day__operation__follow_staff=staff
-            ).select_related(
-                'day',
-                'day__operation',
-                'day__operation__follow_staff',
-                'day__operation__follow_staff__user',
-                'day__operation__selling_staff',
-                'day__operation__selling_staff__user',
-                'day__operation__buyer_company',
-                'tour',
-                'transfer',
-                'vehicle',
-                'supplier',
-                'hotel',
-                'activity',
-                'activity_supplier',
-                'guide'
-            ).prefetch_related(
-                'new_museum',
-                'files'
-            )
-
-            if company:
-                search_query = search_query.filter(company=company)
-
-            if end_date:
-                # Hem başlangıç hem bitiş tarihi varsa
-                search_date = search_query.filter(
-                    day__date__gte=start_date,
-                    day__date__lte=end_date
-                ).order_by('day__date', 'pick_time')
-            else:
-                # Sadece başlangıç tarihi varsa
-                search_date = search_query.filter(
-                    day__date=start_date
-                ).order_by('pick_time')
-
-            if search_date and search_date.exists():
-                # Log kaydı oluştur
-                if staff:
-                    UserActivityLog.objects.create(
-                        company=company,
-                        staff=staff,
-                        action=f"İş listesinde tarih araması yaptı: {start_date} - {end_date or start_date}",
-                        ip_address=get_client_ip(request),
-                        browser_info=request.META.get('HTTP_USER_AGENT', '')
-                    )
-            else:
-                messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
-                search_date = None
-    except Exception as e:
-        messages.error(request, f"TARİH ARAMASINDA HATA OLUŞTU: {str(e)}")
-        search_date = None
-
-    # Context oluştur
-    context = {
-        'today': today,
-        'tomorrow': tomorrow,
-        'nextday': nextday,
-        'today_items': items_by_date[today],
-        'tomorrow_items': items_by_date[tomorrow],
-        'nextday_items': items_by_date[nextday],
-        'search_date': search_date,
-        'job': True
-    }
-
-    # Veriyi cache'le
-    return render(request, 'job/list.html', context)
-
-def operationitemfile_create(request, pk):
-    operation_item = get_object_or_404(Operationitem, pk=pk)
-    if request.method == 'POST':
-        form = OperationFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = form.save(commit=False)
-            file.operation = operation_item.day.operation
-            file.operation_item = operation_item
-            file.save()
-            return render(request, 'operation/partials/item-table.html', {'item': operation_item})
-    else:
-        form = OperationFileForm()
-    return render(request, 'operation/operationitemfile_form.html', {'form': form, 'item': operation_item})
-
-
-
-def operationfile_create(request, pk):
-    operation = get_object_or_404(Operation, pk=pk)
-    if request.method == 'POST':
-        form = OperationFileForm(request.POST, request.FILES)
-        if form.is_valid():
-            file = form.save(commit=False)
-            file.operation = operation
-            file.save()
-            return render(request, 'operation/partials/operation-card.html', {'operation': operation})
-    else:
-        form = OperationFileForm()
-    return render(request, 'operation/operationfile_form.html', {'form': form, 'operation': operation})
-
-
-def sms(phone, mesaj):
-    url = "https://api.netgsm.com.tr/sms/send/xml"
-    headers = {'Content-Type': 'application/xml'}
-    usercode = "8503081334"
-    password = "F#D6C7B"
-    appkey = "xxxx"
-
-    # Sunucu IP'sini al
-    try:
-        response = requests.get('https://api.ipify.org?format=json')
-        print(f"Sunucu IP: {response.json()['ip']}")
-    except:
-        print("IP adresi alınamadı")
-
-    body = f"""<?xml version="1.0" encoding="UTF-8"?>
-        <mainbody>
-           <header>
-            <company>Netgsm</company>
-               <usercode>{usercode}</usercode>
-               <password>{password}</password>
-               <type>n:n</type>
-               <appkey>{appkey}</appkey>
-               <msgheader>MNC GROUP</msgheader>
-           </header>
-           <body>
-               <mp><msg><![CDATA[{mesaj}]]></msg><no>{phone}</no></mp>
-           </body>
-        </mainbody>"""
-
-    try:
-        response = requests.post(url, data=body, headers=headers)
-        print(f"Status Code: {response.status_code}")
-        print(f"Response Content: {response.text}")
-        print(f"Request Body: {body}")
-        response.raise_for_status()
-        return True, "SMS başarıyla gönderildi"
-    except requests.exceptions.RequestException as e:
-        print(f"SMS gönderimi sırasında hata oluştu: {e}")
-        return False, f"SMS gönderilemedi: {str(e)}"
-
-
-
-def cost_calculate():
-    import datetime
-    yesterday = datetime.date.today() - datetime.timedelta(days=1)
-    items = Operationitem.objects.filter(day__date__gte=yesterday)
-
-
-    for new_item in items:
-        if new_item.manuel_vehicle_price:
-            new_item.vehicle_price = new_item.manuel_vehicle_price
-        elif not new_item.vehicle_price and new_item.vehicle and new_item.supplier:
-            cost = None
-            if new_item.operation_type == "Transfer" and new_item.transfer:
-                try:
-                    cost = Cost.objects.get(
-                        transfer=new_item.transfer,
-                        supplier=new_item.supplier,
-                        is_delete=False,
-                        company=new_item.company
-                    )
-                except Cost.DoesNotExist:
-                    print("Maliyet Bulunamadı")
-            elif new_item.operation_type in ["Tur", "TurTransfer", "TransferTur"] and new_item.tour:
-                try:
-                    cost = Cost.objects.get(
-                        tour=new_item.tour,
-                        supplier=new_item.supplier,
-                        is_delete=False,
-                        company=new_item.company
-                    )
-                except Cost.DoesNotExist:
-                    print("Maliyet Bulunamadı")
-
-            if cost:
-                vehicle_type = new_item.vehicle.vehicle
-                vehicle_cost_map = {
-                    "BINEK": cost.car,
-                    "MINIVAN": cost.minivan,
-                    "MINIBUS": cost.minibus,
-                    "MIDIBUS": cost.midibus,
-                    "OTOBUS": cost.bus
-                }
-                new_item.vehicle_price = vehicle_cost_map.get(vehicle_type, 0)
-
-        new_item.save()
-
-def activity_cost_calculate():
-    import datetime
-    date = datetime.date.today() - datetime.timedelta(days=3)
-    items = Operationitem.objects.filter(day__date__gte=date, activity__isnull=False)
-
-    for new_item in items:
-        if new_item.activity and new_item.manuel_activity_price:
-            new_item.activity_price = new_item.manuel_activity_price
-            new_item.save()
-
-
-
+    
 
 @login_required
 def change_password(request):
@@ -2375,3 +191,1149 @@ def change_password(request):
         'form': form,
         'title': 'Şifre Değiştir'
     })
+
+@login_required(login_url='tour:login')
+def dashboard(request):
+    cache_key = f"dashboard_{request.user.id}"
+    cache_timeout = 300
+
+    cached_data = cache.get(cache_key)
+    if cached_data:
+        return render(request, 'dashboard.html', cached_data)
+
+    personel, company = get_user_company_info(request.user)
+
+    models = {
+        'tours': Tour,
+        'transfers': Transfer,
+        'vehicles': Vehicle,
+        'guides': Guide,
+        'hotels': Hotel,
+        'suppliers': Supplier,
+        'activities': Activity,
+        'activitysuppliers': Activitysupplier,
+        'buyercompanies': Buyercompany
+    }
+
+    context = {
+        'user': request.user,
+        'company': company,
+    }
+
+    for model_name, model in models.items():
+        active_query = get_filtered_queryset(model, request, is_deleted=False)
+        deleted_query = get_filtered_queryset(model, request, is_deleted=True)
+
+        context[f'{model_name}_count'] = active_query.count()
+        context[f'deleted_{model_name}_count'] = deleted_query.count()
+
+    if company and not request.user.is_superuser:
+        recent_logs = UserActivityLog.objects.filter(
+            company=company,
+            staff=personel
+        ).order_by('-timestamp')[:5]
+    else:
+        recent_logs = UserActivityLog.objects.all().order_by('-timestamp')[:5]
+
+    context['recent_logs'] = recent_logs
+
+    today = timezone.now().date()
+    if company and not request.user.is_superuser:
+        active_operations = Operation.objects.filter(
+            company=company,
+            is_delete=False,
+            start__lte=today,
+            finish__gte=today,
+            follow_staff=personel
+        ).select_related('buyer_company', 'follow_staff')
+
+        today_jobs = Operationitem.objects.filter(
+            company=company,
+            day__date=today,
+            day__operation__follow_staff=personel
+        ).select_related(
+            'day',
+            'day__operation',
+            'tour',
+            'transfer',
+            'vehicle',
+            'supplier',
+            'hotel',
+            'activity',
+            'guide'
+        )
+    else:
+        active_operations = None
+        today_jobs = None
+
+    context.update({
+        'active_operations': active_operations,
+        'today_jobs': today_jobs
+    })
+
+    create_activity_log(
+        company=company,
+        staff=personel,
+        action="Dashboard sayfasını ziyaret etti",
+        request=request
+    )
+
+    cache.set(cache_key, context, cache_timeout)
+    return render(request, 'dashboard.html', context)
+
+
+
+
+@login_required(login_url='tour:login')
+def generic_list(request, model_name):
+    """
+    Generic view function that lists objects from a specified model.
+    """
+    model, _ = get_model_and_form(model_name)
+    
+    # Cache anahtarı oluştur
+    cache_key = f"generic_list_{model_name}_{request.user.id}"
+    cache_timeout = 60  # 1 dakika
+
+    # Arama sorgusu
+    query = request.GET.get('q')
+
+    # Eğer arama yapılmıyorsa cache'den veri getirmeyi dene
+    if not query:
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            create_activity_log(
+                company=None,
+                staff=None,
+                action=f"{model._meta.verbose_name_plural} listesini ziyaret etti",
+                request=request
+            )
+            return render(request, 'generic/list.html', cached_data)
+
+    # Queryset oluştur
+    queryset = get_filtered_queryset(model, request)
+    
+    # select_related ekle
+    select_related_fields = get_select_related_fields(model_name)
+    if select_related_fields:
+        queryset = queryset.select_related(*select_related_fields)
+
+    # Veritabanından veriyi al
+    objects = list(queryset)
+
+    # Context oluştur
+    context = {
+        'objects': objects,
+        'model_name': model_name,
+        'model_verbose_name': model._meta.verbose_name,
+        'model_verbose_name_plural': model._meta.verbose_name_plural,
+        'query': query,
+    }
+
+    # Log kaydı oluştur
+    create_activity_log(
+        company=None,
+        staff=None,
+        action=f"{model._meta.verbose_name_plural} listesini ziyaret etti",
+        request=request
+    )
+
+    # Önbelleğe al (sadece arama yapılmıyorsa)
+    if not query:
+        cache.set(cache_key, context, cache_timeout)
+
+    return render(request, 'generic/list.html', context)
+
+@login_required(login_url='tour:login')
+def generic_create(request, model_name):
+    """
+    Generic view function for creating objects of a specified model.
+    """
+    model, form_class = get_model_and_form(model_name)
+    
+    # Kullanıcı şirket bilgisi al
+    personel, company = get_user_company_info(request.user)
+    if not company and request.user.is_superuser:
+        company = Sirket.objects.get(id=1)
+
+    if request.method == 'POST':
+        form = form_class(request.POST, request.FILES)
+        if form.is_valid():
+            # Personel formu özel işlem gerektiriyor
+            if model_name.lower() == 'personel':
+                instance = form.save(commit=True, company=company)
+            else:
+                instance = form.save(commit=False)
+                if hasattr(model, 'company') and company:
+                    instance.company = company
+                instance.save()
+
+            # Log kaydı oluştur
+            log_details = get_object_details(instance)
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=f"{model._meta.verbose_name} oluşturdu. Detaylar: {log_details}",
+                request=request
+            )
+
+            messages.success(request, f"{model._meta.verbose_name} başarıyla oluşturuldu.")
+            return redirect('tour:' + model_name.lower() + '_list')
+    else:
+        form = form_class()
+
+    context = {
+        'form': form,
+        'model_name': model_name,
+        'model_verbose_name': model._meta.verbose_name,
+        'form_action': 'Oluştur',
+        'is_create': True
+    }
+
+    return render(request, 'generic/form.html', context)
+
+@login_required(login_url='tour:login')
+def generic_update(request, model_name, pk):
+    """
+    Generic view function that updates an object from a specified model.
+    """
+    model, form_class = get_model_and_form(model_name)
+    
+    try:
+        obj = get_object_or_404(model, pk=pk)
+    except:
+        messages.error(request, f"{model._meta.verbose_name} bulunamadı.")
+        return redirect('tour:' + model_name.lower() + '_list')
+
+    if request.method == 'POST':
+        form = form_class(request.POST, request.FILES, instance=obj)
+        if form.is_valid():
+            # Değişiklikten önce mevcut veriyi kaydet
+            old_data = get_object_details(obj)
+            
+            # Formu kaydet
+            updated_instance = form.save()
+            
+            # Log kaydı oluştur
+            new_data = get_object_details(updated_instance)
+            personel, company = get_user_company_info(request.user)
+            
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=f"{model._meta.verbose_name} güncelledi. Detaylar: {old_data} -> {new_data}",
+                request=request
+            )
+
+            messages.success(request, f"{model._meta.verbose_name} başarıyla güncellendi.")
+            return redirect('tour:' + model_name.lower() + '_list')
+    else:
+        form = form_class(instance=obj)
+
+    context = {
+        'form': form,
+        'model_name': model_name,
+        'model_verbose_name': model._meta.verbose_name,
+        'action': 'Güncelle',
+        'object': obj,
+    }
+
+    return render(request, 'generic/form.html', context)
+
+@login_required(login_url='tour:login')
+def generic_delete(request, model_name, pk):
+    """
+    Generic view function that deletes an object from a specified model.
+    """
+    model, _ = get_model_and_form(model_name)
+    
+    try:
+        obj = get_object_or_404(model, pk=pk)
+    except:
+        messages.error(request, f"{model._meta.verbose_name} bulunamadı.")
+        return redirect('tour:' + model_name.lower() + '_list')
+
+    try:
+        # Silme işleminden önce nesne detaylarını kaydet
+        log_details = get_object_details(obj)
+        personel, company = get_user_company_info(request.user)
+
+        if hasattr(obj, 'is_delete'):
+            obj.is_delete = True
+            obj.save()
+            messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
+            
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=f"{model._meta.verbose_name} sildi. Detaylar: {log_details}",
+                request=request
+            )
+        else:
+            obj.delete()
+            messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
+            
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=f"{model._meta.verbose_name} kalıcı olarak sildi. Detaylar: {log_details}",
+                request=request
+            )
+    except Exception as e:
+        messages.error(request, f"Hata oluştu: {str(e)}")
+
+    return redirect('tour:' + model_name.lower() + '_list')
+
+@login_required(login_url='tour:login')
+def generic_deleted_list(request, model_name):
+    """
+    Generic view function that lists deleted objects.
+    """
+    model, _ = get_model_and_form(model_name)
+    
+    # Queryset oluştur
+    queryset = get_filtered_queryset(model, request, is_deleted=True)
+
+    context = {
+        'objects': queryset,
+        'model_name': model_name,
+        'model_verbose_name': model._meta.verbose_name,
+        'model_verbose_name_plural': model._meta.verbose_name_plural,
+        'query': request.GET.get('q'),
+        'is_deleted_list': True,
+    }
+
+    # Log kaydı oluştur
+    personel, company = get_user_company_info(request.user)
+    create_activity_log(
+        company=company,
+        staff=personel,
+        action=f"Silinmiş {model._meta.verbose_name_plural} listesini ziyaret etti",
+        request=request
+    )
+
+    return render(request, 'generic/deleted_list.html', context)
+
+@login_required(login_url='tour:login')
+def restore_object(request, model_name, pk):
+    """
+    Generic view function that restores a deleted object.
+    """
+    model, _ = get_model_and_form(model_name)
+    
+    try:
+        obj = get_object_or_404(model, pk=pk, is_delete=True)
+    except:
+        messages.error(request, f"Silinmiş {model._meta.verbose_name} bulunamadı.")
+        return redirect('tour:' + model_name.lower() + '_deleted_list')
+
+    try:
+        # Geri getirme işleminden önce nesne detaylarını kaydet
+        log_details = get_object_details(obj)
+        personel, company = get_user_company_info(request.user)
+
+        obj.is_delete = False
+        obj.save()
+
+        create_activity_log(
+            company=company,
+            staff=personel,
+            action=f"{model._meta.verbose_name} geri getirdi. Detaylar: {log_details}",
+            request=request
+        )
+
+        messages.success(request, f"{model._meta.verbose_name} başarıyla geri getirildi.")
+    except Exception as e:
+        messages.error(request, f"Hata oluştu: {str(e)}")
+
+    return redirect('tour:' + model_name.lower() + '_deleted_list')
+
+# Yardımcı fonksiyon: Kullanıcının IP adresini almak için
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+
+@login_required(login_url='tour:login')
+def my_user_activity_log(request):
+    """
+    Kullanıcının kendi aktivite kayıtlarını görüntüleyen view fonksiyonu.
+    Son 3 günlük kayıtları gösterir.
+
+    Args:
+        request: Django HTTP request
+
+    Returns:
+        Kullanıcı aktivite loglarını listeleyen sayfayı render eder
+    """
+    try:
+        # Temel sorguyu oluştur
+        base_query = get_base_activity_log_query()
+        
+        # Kullanıcı tipine göre logları filtrele
+        user_activity_logs, title, error_message = get_user_activity_logs(request, base_query)
+        
+        # Hata mesajı varsa göster
+        if error_message:
+            messages.warning(request, error_message)
+        
+        # Sorgu sonuçlarını değerlendir
+        if not user_activity_logs.exists():
+            messages.info(request, "GÖRÜNTÜLENECEK AKTİVİTE KAYDI BULUNAMADI")
+
+        # Toplam kayıt sayısını hesapla
+        total_count = user_activity_logs.count()
+
+        # Sayfalama için kayıtları al
+        page = request.GET.get('page', 1)
+        logs = paginate_activity_logs(user_activity_logs, page)
+
+        context = {
+            'page_title': title,
+            'logs': logs,
+            'is_activity_log': True,
+            'filtre_tarih': (timezone.now() - timezone.timedelta(days=3)).strftime('%d.%m.%Y'),
+            'total_count': total_count
+        }
+
+        return render(request, 'generic/activity_logs.html', context)
+
+    except Exception as e:
+        logger.error(f"Aktivite log hatası: {str(e)}", exc_info=True)
+        messages.error(request, f"AKTİVİTE KAYITLARI GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+
+@login_required(login_url='tour:login')
+def operation_create(request):
+    """
+    Yeni bir operasyon oluşturmak için view fonksiyonu
+    """
+    # Kullanıcı şirket bilgisi al
+    personel, company = get_user_company_info(request.user)
+    if not company and request.user.is_superuser:
+        company = Sirket.objects.get(id=1)
+
+    if request.method == 'POST':
+        form = OperationForm(request.POST, company=company)
+        if form.is_valid():
+            try:
+                # Formu kaydet ve günleri oluştur
+                instance, days = save_operation_form(form, company, personel)
+                
+                # Log kaydı oluştur
+                log_message = get_operation_log_message(instance, request.user.is_superuser)
+                create_activity_log(
+                    company=company,
+                    staff=personel,
+                    action=log_message,
+                    request=request
+                )
+
+                messages.success(request, f"Operasyon başarıyla oluşturuldu: {instance.ticket} (#{instance.buyer_company.name})")
+                return redirect('tour:operation_detail', pk=instance.id)
+                
+            except Exception as e:
+                logger.error(f"Operasyon oluşturma hatası: {str(e)}")
+                messages.error(request, f"Operasyon oluşturulurken bir hata oluştu: {str(e)}")
+    else:
+        form = OperationForm(company=company)
+
+    return render(request, 'operation/create.html', {'form': form})
+
+
+
+@login_required(login_url='tour:login')
+def operation_detail(request, pk):
+    """
+    Operasyon detaylarını görüntülemek için view fonksiyonu.
+    Performans için gerekli tüm öğeler önceden alınır ve ilişkisel sorgular optimize edilir.
+    """
+
+    try:
+        # Operasyonu ve ilişkili verileri getir
+        operation = get_operation_with_relations(pk)
+        days, items, items_by_day = get_operation_detail_data(operation)
+
+        # Log kaydı oluştur
+        log_message = get_operation_detail_log_message(operation, request.user.is_superuser)
+        personel, company = get_user_company_info(request.user)
+        create_activity_log(
+            company=company,
+            staff=personel,
+            action=log_message,
+            request=request
+        )
+
+        # Context oluştur
+        context = {
+            'operation': operation,
+            'days': days,
+            'items': items,
+            'items_by_day': items_by_day,
+        }
+
+
+        return render(request, 'operation/detail.html', context)
+
+    except Exception as e:
+        logger.error(f"Operasyon detay görüntüleme hatası: {str(e)}")
+        messages.error(request, f"Operasyon detayları görüntülenirken bir hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+
+@login_required(login_url='tour:login')
+def operation_edit(request, pk):
+    """
+    Operasyon düzenleme view fonksiyonu.
+    """
+    try:
+        # Operasyonu getir
+        operation = get_object_or_404(Operation, pk=pk)
+        
+        # Kullanıcı bilgilerini al
+        personel, company = get_user_company_info(request.user)
+        
+        if request.method == 'POST':
+            form = OperationForm(request.POST, instance=operation)
+            
+            # Formu kaydet
+            success, instance, error = save_operation_edit_form(form, operation, company, personel)
+            
+            if success:
+                # Başarılı log kaydı
+                log_message = get_operation_edit_log_message(
+                    operation=operation,
+                    action_type='create',
+                    is_superuser=request.user.is_superuser
+                )
+                create_activity_log(
+                    company=company,
+                    staff=personel,
+                    action=log_message,
+                    request=request
+                )
+                return render(request, 'operation/partials/operation-card.html', {'operation': operation})
+            else:
+                # Hata log kaydı
+                log_message = get_operation_edit_log_message(
+                    operation=operation,
+                    action_type='error',
+                    is_superuser=request.user.is_superuser,
+                    form_errors=error
+                )
+                create_activity_log(
+                    company=company,
+                    staff=personel,
+                    action=log_message,
+                    request=request
+                )
+                logger.error(f"Form hataları: {error}")
+        else:
+            form = OperationForm(instance=operation)
+            
+            # Sayfa ziyaret log kaydı
+            log_message = get_operation_edit_log_message(
+                operation=operation,
+                action_type='visit',
+                is_superuser=request.user.is_superuser
+            )
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=log_message,
+                request=request
+            )
+
+        return render(request, 'operation/edit.html', {'form': form, 'operation': operation})
+        
+    except Exception as e:
+        logger.error(f"Operasyon düzenleme hatası: {str(e)}")
+        messages.error(request, f"Operasyon düzenlenirken bir hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+
+@login_required(login_url='tour:login')
+def operationitem_edit(request, pk):
+    """
+    Operasyon öğesi düzenleme view fonksiyonu.
+    """
+    try:
+        # Operasyon öğesini getir
+        item = get_object_or_404(Operationitem, pk=pk)
+        
+        # Eski değerleri kaydet
+        old_driver = item.driver
+        old_driver_phone = item.driver_phone if item.driver else None
+        old_guide = item.guide
+        old_guide_phone = item.guide.phone if item.guide else None
+        
+        form = OperationItemForm(request.POST or None, instance=item)
+        
+        if request.method == 'POST':
+            if form.is_valid():
+                # Formu kaydet
+                new_item = form.save(commit=False)
+                
+                # Araç fiyatını hesapla
+                new_item.vehicle_price = calculate_vehicle_price(new_item)
+                
+                # Aktivite fiyatını güncelle
+                if new_item.activity and new_item.manuel_activity_price and new_item.activity_price == 0:
+                    new_item.activity_price = new_item.manuel_activity_price
+                
+                new_item.save()
+                
+                # SMS gönder
+                send_operation_sms(new_item, old_driver, old_guide)
+                
+                return render(request, 'operation/partials/item-table.html', {'item': new_item})
+            else:
+                logger.error(f"Form hataları: {form.errors}")
+                
+        return render(request, 'operation/item-edit.html', {'form': form, 'item': item})
+        
+    except Exception as e:
+        logger.error(f"Operasyon öğesi düzenleme hatası: {str(e)}")
+        messages.error(request, f"Operasyon öğesi düzenlenirken bir hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+@login_required(login_url='tour:login')
+def operation_toggle_view(request, pk):
+    """
+    Operasyonu ve ilişkili tüm öğeleri siler/geri yükler.
+    """
+    try:
+        # Operasyonu getir
+        operation = get_object_or_404(Operation, pk=pk)
+        
+        # Silme/geri yükleme işlemini gerçekleştir
+        success, error, is_deleted = toggle_operation(operation)
+        
+        if success:
+            # Log kaydı oluştur
+            personel, company = get_user_company_info(request.user)
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=get_operation_toggle_log_message(operation, is_deleted, request.user.is_superuser),
+                request=request
+            )
+            messages.success(request, f"Operasyon başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
+        else:
+            messages.error(request, f"Operasyon {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
+            
+        next_url = request.GET.get('next')
+        return redirect(next_url if next_url else 'tour:operation_list')
+        
+    except Exception as e:
+        logger.error(f"Operasyon {'geri yükleme' if operation.is_delete else 'silme'} hatası: {str(e)}")
+        messages.error(request, f"Operasyon {'geri yüklenirken' if operation.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
+        return redirect('tour:operation_list')
+
+
+@login_required(login_url='tour:login')
+def operationday_toggle_view(request, pk):
+    """
+    Operasyon gününü ve ilişkili öğeleri siler/geri yükler.
+    """
+    try:
+        # Operasyon gününü getir
+        day = get_object_or_404(Operationday, pk=pk)
+        
+        # Silme/geri yükleme işlemini gerçekleştir
+        success, error, is_deleted = toggle_operation_day(day)
+        
+        if success:
+            # Log kaydı oluştur
+            personel, company = get_user_company_info(request.user)
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=get_operation_day_toggle_log_message(day, is_deleted, request.user.is_superuser),
+                request=request
+            )
+            messages.success(request, f"Operasyon günü başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
+        else:
+            messages.error(request, f"Operasyon günü {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
+            
+        next_url = request.GET.get('next')
+        return redirect(next_url if next_url else 'tour:operation_list')
+        
+    except Exception as e:
+        logger.error(f"Operasyon günü {'geri yükleme' if day.is_delete else 'silme'} hatası: {str(e)}")
+        messages.error(request, f"Operasyon günü {'geri yüklenirken' if day.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
+        return redirect('tour:operation_list')
+
+
+
+@login_required(login_url='tour:login')
+def operationitem_toggle_view(request, pk):
+    """
+    Operasyon öğesini siler/geri yükler.
+    """
+    try:
+        # Operasyon öğesini getir
+        item = get_object_or_404(Operationitem, pk=pk)
+        
+        # Silme/geri yükleme işlemini gerçekleştir
+        success, error, is_deleted = toggle_operation_item(item)
+        
+        if success:
+            # Log kaydı oluştur
+            personel, company = get_user_company_info(request.user)
+            create_activity_log(
+                company=company,
+                staff=personel,
+                action=get_operation_item_toggle_log_message(item, is_deleted, request.user.is_superuser),
+                request=request
+            )
+            messages.success(request, f"Operasyon öğesi başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
+        else:
+            messages.error(request, f"Operasyon öğesi {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
+            
+        next_url = request.GET.get('next')
+        return redirect(next_url if next_url else 'tour:operation_detail', pk=item.day.operation.id)
+        
+    except Exception as e:
+        logger.error(f"Operasyon öğesi {'geri yükleme' if item.is_delete else 'silme'} hatası: {str(e)}")
+        messages.error(request, f"Operasyon öğesi {'geri yüklenirken' if item.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+    
+
+@login_required(login_url='tour:login')
+def operation_deleted_list(request):
+    """
+    Operasyonları aylara, yıllara ve diğer kriterlere göre listeleyen view fonksiyonu.
+    Performans optimizasyonu yapılmış versiyonu.
+    """
+    try:
+        # Kullanıcı ve şirket bilgilerini al
+        staff, company = get_user_company_info(request.user)
+        
+        # Temel sorgu yapısını oluştur
+        base_query = Operation.objects.select_related(
+            'company',
+            'buyer_company',
+            'selling_staff',
+            'selling_staff__user',
+            'follow_staff',
+            'follow_staff__user'
+        ).filter(is_delete=True)
+        
+        # Şirket filtrelemesi
+        if company:
+            base_query = base_query.filter(company=company)
+            
+        # Filtreleri uygula
+        filters, month, year, current_filters = get_operation_list_filters(request, company)
+        queryset = base_query.filter(filters).order_by('-start')
+        
+        # İstatistikleri hesapla
+        stats = get_operation_list_stats(queryset)
+        
+        # Yıl listesini al
+        year_list = get_operation_list_year_list()
+        
+        # Müşteri şirketlerini ve personel listesini al
+        companies = Buyercompany.objects.filter(
+            is_delete=False,
+            **({"company": company} if company else {})
+        ).only('id', 'name')
+        
+        staffs = Personel.objects.filter(
+            is_active=True,
+            **({"company": company} if company else {})
+        ).select_related('user').only('id', 'user__first_name', 'user__last_name')
+        
+        # Log kaydı oluştur
+        create_activity_log(
+            request=request,
+            company=company,
+            staff=staff,
+            action="Operasyon listesini görüntüledi"
+        )
+        
+        # Sonuçları sayfalama
+        paginator = Paginator(queryset, 50)
+        page = request.GET.get('page')
+        try:
+            operations = paginator.page(page)
+        except PageNotAnInteger:
+            operations = paginator.page(1)
+        except EmptyPage:
+            operations = paginator.page(paginator.num_pages)
+            
+        # Context oluştur
+        context = get_operation_list_context(
+            operations, month, year, year_list,
+            companies, staffs, stats, current_filters
+        )
+        
+        return render(request, 'operation/list.html', context)
+        
+    except Exception as e:
+        logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
+        messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+@login_required(login_url='tour:login')
+def operationday_item_create(request, day_id):
+    """
+    Operasyon günü öğesi oluşturma view fonksiyonu.
+    """
+    try:
+        day = get_object_or_404(Operationday, id=day_id)
+        staff, company = get_user_company_info(request.user)
+        
+        if request.method == 'POST':
+            form = OperationItemForm(request.POST, company=company)
+            success, item, error = save_operation_day_item(form, day, company)
+            
+            if success:
+                # Log kaydı oluştur
+                create_activity_log(
+                    request=request,
+                    company=company,
+                    staff=staff,
+                    action=get_operation_day_log_message(day, 'create', item=item)
+                )
+                return render(request, 'operation/partials/item-table.html', {'item': item})
+            else:
+                # Hata log kaydı oluştur
+                create_activity_log(
+                    request=request,
+                    company=company,
+                    staff=staff,
+                    action=get_operation_day_log_message(day, 'error', item=item, form_errors=error)
+                )
+                logger.error(f"Form hataları: {error}")
+        else:
+            form = OperationItemForm(company=company)
+            # Ziyaret log kaydı oluştur
+            create_activity_log(
+                request=request,
+                company=company,
+                staff=staff,
+                action=get_operation_day_log_message(day, 'visit')
+            )
+            
+        return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
+        
+    except Exception as e:
+        logger.error(f"Operasyon günü öğesi oluşturma hatası: {str(e)}")
+        messages.error(request, f"Operasyon günü öğesi oluşturulurken bir hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+
+@login_required(login_url='tour:login')
+def operation_list(request):
+    """
+    Operasyonları aylara, yıllara ve diğer kriterlere göre listeleyen view fonksiyonu.
+    Performans optimizasyonu yapılmış versiyonu.
+    """
+    try:
+        # Kullanıcı ve şirket bilgilerini al
+        staff, company = get_user_company_info(request.user)
+        
+        # Temel sorgu yapısını oluştur
+        base_query = Operation.objects.select_related(
+            'company',
+            'buyer_company',
+            'selling_staff',
+            'selling_staff__user',
+            'follow_staff',
+            'follow_staff__user'
+        ).filter(is_delete=False)
+        
+        # Şirket filtrelemesi
+        if company:
+            base_query = base_query.filter(company=company)
+            
+        # Filtreleri uygula
+        filters, month, year, current_filters = get_operation_list_filters(request, company)
+        queryset = base_query.filter(filters).order_by('-start')
+        
+        # İstatistikleri hesapla
+        stats = get_operation_list_stats(queryset)
+        
+        # Yıl listesini al
+        year_list = get_operation_list_year_list()
+        
+        # Müşteri şirketlerini ve personel listesini al
+        companies = Buyercompany.objects.filter(
+            is_delete=False,
+            **({"company": company} if company else {})
+        ).only('id', 'name')
+        
+        staffs = Personel.objects.filter(
+            is_active=True,
+            **({"company": company} if company else {})
+        ).select_related('user').only('id', 'user__first_name', 'user__last_name')
+        
+        # Log kaydı oluştur
+        create_activity_log(
+            request=request,
+            company=company,
+            staff=staff,
+            action="Operasyon listesini görüntüledi"
+        )
+        
+        # Sonuçları sayfalama
+        paginator = Paginator(queryset, 50)
+        page = request.GET.get('page')
+        try:
+            operations = paginator.page(page)
+        except PageNotAnInteger:
+            operations = paginator.page(1)
+        except EmptyPage:
+            operations = paginator.page(paginator.num_pages)
+            
+        # Context oluştur
+        context = get_operation_list_context(
+            operations, month, year, year_list,
+            companies, staffs, stats, current_filters
+        )
+        
+        return render(request, 'operation/list.html', context)
+        
+    except Exception as e:
+        logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
+        messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+
+
+@login_required(login_url='tour:login')
+def job_list(request):
+    try:
+        # Tarihleri hesapla
+        today, tomorrow, nextday, dates = get_job_list_dates()
+        
+        # Kullanıcı ve şirket bilgilerini al
+        staff, company = get_user_company_info(request.user)
+        
+        # Temel sorguyu oluştur
+        base_query = get_job_list_base_query(dates, company)
+        
+        # Tüm öğeleri tek sorguda al ve hafızada grupla
+        all_items = base_query
+        
+        # Sonuçları hafızada grupla
+        items_by_date = {date: [] for date in dates}
+        for item in all_items:
+            items_by_date[item.day.date].append(item)
+            
+        # Log kaydını oluştur
+        create_job_list_log(request, company, staff)
+        
+        # Tarih araması için değişkenler
+        search_date = None
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        if start_date:
+            # Tarih araması yap
+            search_date = get_job_list_search_query(start_date, end_date, company)
+            
+            if not search_date.exists():
+                messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
+                search_date = None
+            elif staff:
+                create_job_list_log(request, company, staff, True, start_date, end_date)
+                
+        # Context oluştur
+        context = get_job_list_context(today, tomorrow, nextday, items_by_date, search_date)
+        
+        return render(request, 'job/list.html', context)
+        
+    except Exception as e:
+        messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+
+@login_required(login_url='tour:login')
+def my_job_list(request):
+    try:
+        # Tarihleri hesapla
+        today, tomorrow, nextday, dates = get_job_list_dates()
+        
+        # Kullanıcı ve şirket bilgilerini al
+        staff, company = get_user_company_info(request.user)
+        
+        # Temel sorguyu oluştur
+        base_query = get_job_list_base_query(dates, company, staff)
+        
+        # Tüm öğeleri tek sorguda al ve hafızada grupla
+        all_items = base_query
+        
+        # Sonuçları hafızada grupla
+        items_by_date = {date: [] for date in dates}
+        for item in all_items:
+            items_by_date[item.day.date].append(item)
+            
+        # Log kaydını oluştur
+        create_job_list_log(request, company, staff)
+        
+        # Tarih araması için değişkenler
+        search_date = None
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+        
+        if start_date:
+            try:
+                # Tarih araması yap
+                search_date = get_job_list_search_query(start_date, end_date, company, staff)
+                
+                if search_date and search_date.exists():
+                    create_job_list_log(request, company, staff, True, start_date, end_date)
+                else:
+                    messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
+                    search_date = None
+            except Exception as e:
+                messages.error(request, f"TARİH ARAMASINDA HATA OLUŞTU: {str(e)}")
+                search_date = None
+                
+        # Context oluştur
+        context = get_job_list_context(today, tomorrow, nextday, items_by_date, search_date)
+        
+        return render(request, 'job/list.html', context)
+        
+    except Exception as e:
+        messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
+        return redirect('tour:dashboard')
+    
+@login_required(login_url='tour:login')
+def operationitemfile_create(request, pk):
+    try:
+        operation_item = get_object_or_404(Operationitem, pk=pk)
+        operation = operation_item.day.operation
+        
+        if request.method == 'POST':
+            form = OperationFileForm(request.POST, request.FILES)
+            success, file, error = save_operation_file_form(form, operation, operation_item)
+            
+            if success:
+                return render(request, get_operation_file_partial_template(operation_item), 
+                            get_operation_file_context_data(operation_item))
+            else:
+                messages.error(request, f"Dosya yüklenirken hata oluştu: {error}")
+        else:
+            form = OperationFileForm()
+            
+        return render(request, get_operation_file_template(operation_item), 
+                     get_operation_file_context(form, operation, operation_item))
+                     
+    except Exception as e:
+        messages.error(request, f"Dosya yükleme işlemi sırasında hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+@login_required(login_url='tour:login')
+def operationfile_create(request, pk):
+    try:
+        operation = get_object_or_404(Operation, pk=pk)
+        
+        if request.method == 'POST':
+            form = OperationFileForm(request.POST, request.FILES)
+            success, file, error = save_operation_file_form(form, operation)
+            
+            if success:
+                return render(request, get_operation_file_partial_template(), 
+                            get_operation_file_context_data())
+            else:
+                messages.error(request, f"Dosya yüklenirken hata oluştu: {error}")
+        else:
+            form = OperationFileForm()
+            
+        return render(request, get_operation_file_template(), 
+                     get_operation_file_context(form, operation))
+                     
+    except Exception as e:
+        messages.error(request, f"Dosya yükleme işlemi sırasında hata oluştu: {str(e)}")
+        return redirect('tour:dashboard')
+
+
+def cost_calculate():
+    """
+    Araç maliyetlerini hesaplar.
+    """
+    try:
+        items = Operationitem.objects.all()
+        update_item_costs(items, days_back=1, include_activity=False)
+    except Exception as e:
+        logger.error(f"Araç maliyeti hesaplama hatası: {str(e)}")
+
+def activity_cost_calculate():
+    """
+    Aktivite maliyetlerini hesaplar.
+    """
+    try:
+        items = Operationitem.objects.filter(activity__isnull=False)
+        update_item_costs(items, days_back=3, include_activity=True)
+    except Exception as e:
+        logger.error(f"Aktivite maliyeti hesaplama hatası: {str(e)}")
+
+@login_required
+def operationitem_deleted_list(request, operation_id):
+    """Silinmiş operasyon öğelerini listeler"""
+    operation = get_object_or_404(Operation, pk=operation_id)   
+    try:
+        # Temel sorguyu oluştur
+        query = get_deleted_items_query(
+            company=request.user.company if not request.user.is_superuser else None,
+            staff=request.user if not request.user.is_superuser else None
+        ).filter(
+            day__operation=operation,  # Sadece seçilen operasyona ait öğeleri filtrele
+            is_delete=True  # Sadece silinmiş öğeleri filtrele
+        )
+        
+        # Arama parametrelerini al
+        search_params = {
+            'query': request.GET.get('q'),
+            'start_date': request.GET.get('start_date'),
+            'end_date': request.GET.get('end_date')
+        }
+        
+        # Filtreleri uygula
+        query = apply_item_filters(query, search_params)
+        
+        # Sayfalama
+        paginator = Paginator(query, 10)  # Her sayfada 10 öğe
+        page = request.GET.get('page', 1)
+        items = paginator.get_page(page)
+        
+        # Aktivite logu oluştur
+        personel, company = get_user_company_info(request.user)
+        create_activity_log(
+            request=request,
+            company=company,
+            staff=personel,
+            action=f"Operasyon #{operation.id} için silinmiş öğeler listelendi"
+        )
+        
+        context = {
+            'items': items,
+            'query': search_params['query'],
+            'start_date': search_params['start_date'],
+            'end_date': search_params['end_date'],
+            'total_count': query.count(),
+            'operation': operation
+        }
+        
+        return render(request, 'operation/deleted_items.html', context)
+        
+    except Exception as e:
+        logger.error(f"Silinmiş operasyon öğeleri listelenirken hata oluştu: {str(e)}")
+        messages.error(request, f"Silinmiş operasyon öğeleri listelenirken bir hata oluştu: {str(e)}")
+        return redirect('tour:operation_detail', pk=operation_id)

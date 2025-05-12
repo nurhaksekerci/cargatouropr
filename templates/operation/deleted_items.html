@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Silinmiş Operasyon Öğeleri{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Silinmiş Operasyon Öğeleri</h3>
+                    <div class="card-tools">
+                        <form method="get" class="form-inline">
+                            <div class="input-group">
+                                <input type="text" name="q" class="form-control" placeholder="Ara..." value="{{ query }}">
+                                <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+                                <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> Ara
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Operasyon Tipi</th>
+                                    <th>Sürücü</th>
+                                    <th>Plaka</th>
+                                    <th>Alış Lokasyonu</th>
+                                    <th>Bırakış Lokasyonu</th>
+                                    <th>Tarih</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>{{ item.operation_type }}</td>
+                                    <td>{{ item.driver }}</td>
+                                    <td>{{ item.plaka }}</td>
+                                    <td>{{ item.pick_location }}</td>
+                                    <td>{{ item.drop_location }}</td>
+                                    <td>{{ item.day.date|date:"d.m.Y" }}</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-success restore-item" href="{% url 'tour:operationitem_toggle' item.id %}?next=/operasyon/{{ operation.id }}/">
+                                            <i class="fas fa-undo"></i> Geri Yükle
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">Silinmiş operasyon öğesi bulunamadı.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    {% if items.has_other_pages %}
+                    <nav aria-label="Sayfalama">
+                        <ul class="pagination justify-content-center">
+                            {% if items.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'tour:operationitem_deleted_list' operation.id %}?page={{ items.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Önceki</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for num in items.paginator.page_range %}
+                            {% if items.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'tour:operationitem_deleted_list' operation.id %}?page={{ num }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+                            
+                            {% if items.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'tour:operationitem_deleted_list' operation.id %}?page={{ items.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}">Sonraki</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

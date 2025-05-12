@@ -20,14 +20,17 @@ urlpatterns = [
     path('operasyon/ekle/', views.operation_create, name='operation_create'),
     path('operasyon/<int:pk>/', views.operation_detail, name='operation_detail'),
     path('operasyon-item/<int:pk>/', views.operationitem_edit, name='operationitem_edit'),
-    path('operasyon-delete/<int:pk>/', views.operation_delete, name='operation_delete'),
+    path('operasyon-toggle/<int:pk>/', views.operation_toggle_view, name='operation_toggle'),
     path('operasyon-edit/<int:pk>/', views.operation_edit, name='operation_edit'),
 
     # Operasyon İtem ekleme
     path('operasyon-item-ekle/<int:day_id>/', views.operationday_item_create, name='operationday_item_create'),
 
+    path('operasyon-silinmis-listesi/', views.operation_deleted_list, name='operation_deleted_list'),
+    path('operasyon-gün-toggle/<int:pk>/', views.operationday_toggle_view, name='operationday_toggle'),
+
     # Operasyon İtem silme
-    path('operasyon-item-sil/<int:pk>/', views.operationitem_delete, name='operationitem_delete'),
+    path('operasyon-item-toggle/<int:pk>/', views.operationitem_toggle_view, name='operationitem_toggle'),
 
     # Operasyon Dosyası ekleme
     path('operasyon-dosyasi-ekle/<int:pk>/', views.operationfile_create, name='operationfile_create'),
@@ -149,4 +152,5 @@ urlpatterns = [
 
     # Operasyon URL'leri
     path('operasyon-listesi/', views.operation_list, name='operation_list'),
+    path('operationitem/deleted/<int:operation_id>/', views.operationitem_deleted_list, name='operationitem_deleted_list'),
 ]
