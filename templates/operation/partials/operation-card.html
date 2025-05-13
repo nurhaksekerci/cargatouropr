@@ -376,7 +376,7 @@
         </button>
       </div>
       <div class="col-3">
-        <a href="{% url 'tour:operation_toggle' operation.id %}" class="btn {% if operation.is_delete %}btn-success{% else %}btn-outline-danger{% endif %} btn-lg w-100 d-flex align-items-center justify-content-center">
+        <a href="{% url 'tour:operation_toggle' operation.id %}" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center shadow-sm" style="background-image: linear-gradient(to right,rgb(210, 75, 75),rgb(95, 2, 2)); border: none;">
           {% if operation.is_delete %}
             <i class="fas fa-trash-alt me-2"></i>GERİ YÜKLE
           {% else %}

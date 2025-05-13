@@ -22,14 +22,13 @@
                         <i class="bi bi-building"></i> KAYITLAR
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        {% if user.is_superuser or user.username == "MUSA" or user.username == "ASLI" %}
                         <li><a class="dropdown-item" href="{% url 'tour:personel_list' %}">PERSONELLER</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        
                         <li><a class="dropdown-item" href="{% url 'tour:tour_list' %}">TURLAR</a></li>
                         <li><a class="dropdown-item" href="{% url 'tour:transfer_list' %}">TRANSFERLER</a></li>
-                        <li><a class="dropdown-item" href="{% url 'tour:hotel_list' %}">OTELLER</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'tour:guide_list' %}">REHBERLER</a></li>
-                        <li><a class="dropdown-item" href="{% url 'tour:museum_list' %}">MÜZELER</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'tour:activity_list' %}">AKTİVİTELER</a></li>
                         <li><a class="dropdown-item" href="{% url 'tour:activitysupplier_list' %}">AKTİVİTE TEDARİKÇİLERİ</a></li>
@@ -39,6 +38,11 @@
                         <li><a class="dropdown-item" href="{% url 'tour:cost_list' %}">MALİYETLER</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'tour:buyercompany_list' %}">ALICI FİRMALAR</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'tour:museum_list' %}">MÜZELER</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="{% url 'tour:hotel_list' %}">OTELLER</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">

@@ -3,6 +3,7 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib import messages
 import re
 import requests
+from datetime import timedelta
 from django.urls import reverse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
@@ -113,16 +114,16 @@ def forgot_password(request):
                 personel, _ = get_user_company_info(user)
                 if not personel:
                     raise Exception("Kullanıcı personel bilgisi bulunamadı")
-                    
+
                 message = f"Sayın {user.get_full_name().upper()}, Şifre sıfırlama kodunuz: {sms_code}"
                 success, _ = send_sms(normalize_phone_number(personel.phone), message)
-                
+
                 if success:
                     messages.success(request, 'SMS kodu telefonunuza gönderildi.')
                     return redirect('tour:reset_password', username=username)
                 else:
                     raise Exception("SMS gönderilemedi")
-                    
+
             except Exception as e:
                 logger.error(f"SMS gönderme hatası: {str(e)}")
                 messages.error(request, 'SMS gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
@@ -171,7 +172,7 @@ def reset_password(request, username):
         logger.error(f"Şifre sıfırlama hatası: {str(e)}")
         messages.error(request, 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.')
         return redirect('tour:forgot_password')
-    
+
 
 @login_required
 def change_password(request):
@@ -290,7 +291,7 @@ def generic_list(request, model_name):
     Generic view function that lists objects from a specified model.
     """
     model, _ = get_model_and_form(model_name)
-    
+
     # Cache anahtarı oluştur
     cache_key = f"generic_list_{model_name}_{request.user.id}"
     cache_timeout = 60  # 1 dakika
@@ -312,7 +313,7 @@ def generic_list(request, model_name):
 
     # Queryset oluştur
     queryset = get_filtered_queryset(model, request)
-    
+
     # select_related ekle
     select_related_fields = get_select_related_fields(model_name)
     if select_related_fields:
@@ -350,7 +351,7 @@ def generic_create(request, model_name):
     Generic view function for creating objects of a specified model.
     """
     model, form_class = get_model_and_form(model_name)
-    
+
     # Kullanıcı şirket bilgisi al
     personel, company = get_user_company_info(request.user)
     if not company and request.user.is_superuser:
@@ -398,7 +399,7 @@ def generic_update(request, model_name, pk):
     Generic view function that updates an object from a specified model.
     """
     model, form_class = get_model_and_form(model_name)
-    
+
     try:
         obj = get_object_or_404(model, pk=pk)
     except:
@@ -410,14 +411,14 @@ def generic_update(request, model_name, pk):
         if form.is_valid():
             # Değişiklikten önce mevcut veriyi kaydet
             old_data = get_object_details(obj)
-            
+
             # Formu kaydet
             updated_instance = form.save()
-            
+
             # Log kaydı oluştur
             new_data = get_object_details(updated_instance)
             personel, company = get_user_company_info(request.user)
-            
+
             create_activity_log(
                 company=company,
                 staff=personel,
@@ -446,7 +447,7 @@ def generic_delete(request, model_name, pk):
     Generic view function that deletes an object from a specified model.
     """
     model, _ = get_model_and_form(model_name)
-    
+
     try:
         obj = get_object_or_404(model, pk=pk)
     except:
@@ -462,7 +463,7 @@ def generic_delete(request, model_name, pk):
             obj.is_delete = True
             obj.save()
             messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
-            
+
             create_activity_log(
                 company=company,
                 staff=personel,
@@ -472,7 +473,7 @@ def generic_delete(request, model_name, pk):
         else:
             obj.delete()
             messages.success(request, f"{model._meta.verbose_name} başarıyla silindi.")
-            
+
             create_activity_log(
                 company=company,
                 staff=personel,
@@ -490,7 +491,7 @@ def generic_deleted_list(request, model_name):
     Generic view function that lists deleted objects.
     """
     model, _ = get_model_and_form(model_name)
-    
+
     # Queryset oluştur
     queryset = get_filtered_queryset(model, request, is_deleted=True)
 
@@ -520,7 +521,7 @@ def restore_object(request, model_name, pk):
     Generic view function that restores a deleted object.
     """
     model, _ = get_model_and_form(model_name)
-    
+
     try:
         obj = get_object_or_404(model, pk=pk, is_delete=True)
     except:
@@ -574,14 +575,14 @@ def my_user_activity_log(request):
     try:
         # Temel sorguyu oluştur
         base_query = get_base_activity_log_query()
-        
+
         # Kullanıcı tipine göre logları filtrele
         user_activity_logs, title, error_message = get_user_activity_logs(request, base_query)
-        
+
         # Hata mesajı varsa göster
         if error_message:
             messages.warning(request, error_message)
-        
+
         # Sorgu sonuçlarını değerlendir
         if not user_activity_logs.exists():
             messages.info(request, "GÖRÜNTÜLENECEK AKTİVİTE KAYDI BULUNAMADI")
@@ -626,7 +627,7 @@ def operation_create(request):
             try:
                 # Formu kaydet ve günleri oluştur
                 instance, days = save_operation_form(form, company, personel)
-                
+
                 # Log kaydı oluştur
                 log_message = get_operation_log_message(instance, request.user.is_superuser)
                 create_activity_log(
@@ -638,7 +639,7 @@ def operation_create(request):
 
                 messages.success(request, f"Operasyon başarıyla oluşturuldu: {instance.ticket} (#{instance.buyer_company.name})")
                 return redirect('tour:operation_detail', pk=instance.id)
-                
+
             except Exception as e:
                 logger.error(f"Operasyon oluşturma hatası: {str(e)}")
                 messages.error(request, f"Operasyon oluşturulurken bir hata oluştu: {str(e)}")
@@ -697,16 +698,16 @@ def operation_edit(request, pk):
     try:
         # Operasyonu getir
         operation = get_object_or_404(Operation, pk=pk)
-        
+
         # Kullanıcı bilgilerini al
         personel, company = get_user_company_info(request.user)
-        
+
         if request.method == 'POST':
             form = OperationForm(request.POST, instance=operation)
-            
+
             # Formu kaydet
             success, instance, error = save_operation_edit_form(form, operation, company, personel)
-            
+
             if success:
                 # Başarılı log kaydı
                 log_message = get_operation_edit_log_message(
@@ -738,7 +739,7 @@ def operation_edit(request, pk):
                 logger.error(f"Form hataları: {error}")
         else:
             form = OperationForm(instance=operation)
-            
+
             # Sayfa ziyaret log kaydı
             log_message = get_operation_edit_log_message(
                 operation=operation,
@@ -753,7 +754,7 @@ def operation_edit(request, pk):
             )
 
         return render(request, 'operation/edit.html', {'form': form, 'operation': operation})
-        
+
     except Exception as e:
         logger.error(f"Operasyon düzenleme hatası: {str(e)}")
         messages.error(request, f"Operasyon düzenlenirken bir hata oluştu: {str(e)}")
@@ -769,38 +770,38 @@ def operationitem_edit(request, pk):
     try:
         # Operasyon öğesini getir
         item = get_object_or_404(Operationitem, pk=pk)
-        
+
         # Eski değerleri kaydet
         old_driver = item.driver
         old_driver_phone = item.driver_phone if item.driver else None
         old_guide = item.guide
         old_guide_phone = item.guide.phone if item.guide else None
-        
+
         form = OperationItemForm(request.POST or None, instance=item)
-        
+
         if request.method == 'POST':
             if form.is_valid():
                 # Formu kaydet
                 new_item = form.save(commit=False)
-                
+
                 # Araç fiyatını hesapla
                 new_item.vehicle_price = calculate_vehicle_price(new_item)
-                
+
                 # Aktivite fiyatını güncelle
                 if new_item.activity and new_item.manuel_activity_price and new_item.activity_price == 0:
                     new_item.activity_price = new_item.manuel_activity_price
-                
+
                 new_item.save()
-                
+
                 # SMS gönder
                 send_operation_sms(new_item, old_driver, old_guide)
-                
+
                 return render(request, 'operation/partials/item-table.html', {'item': new_item})
             else:
                 logger.error(f"Form hataları: {form.errors}")
-                
+
         return render(request, 'operation/item-edit.html', {'form': form, 'item': item})
-        
+
     except Exception as e:
         logger.error(f"Operasyon öğesi düzenleme hatası: {str(e)}")
         messages.error(request, f"Operasyon öğesi düzenlenirken bir hata oluştu: {str(e)}")
@@ -815,10 +816,10 @@ def operation_toggle_view(request, pk):
     try:
         # Operasyonu getir
         operation = get_object_or_404(Operation, pk=pk)
-        
+
         # Silme/geri yükleme işlemini gerçekleştir
         success, error, is_deleted = toggle_operation(operation)
-        
+
         if success:
             # Log kaydı oluştur
             personel, company = get_user_company_info(request.user)
@@ -831,10 +832,10 @@ def operation_toggle_view(request, pk):
             messages.success(request, f"Operasyon başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
         else:
             messages.error(request, f"Operasyon {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
-            
+
         next_url = request.GET.get('next')
         return redirect(next_url if next_url else 'tour:operation_list')
-        
+
     except Exception as e:
         logger.error(f"Operasyon {'geri yükleme' if operation.is_delete else 'silme'} hatası: {str(e)}")
         messages.error(request, f"Operasyon {'geri yüklenirken' if operation.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
@@ -849,10 +850,10 @@ def operationday_toggle_view(request, pk):
     try:
         # Operasyon gününü getir
         day = get_object_or_404(Operationday, pk=pk)
-        
+
         # Silme/geri yükleme işlemini gerçekleştir
         success, error, is_deleted = toggle_operation_day(day)
-        
+
         if success:
             # Log kaydı oluştur
             personel, company = get_user_company_info(request.user)
@@ -865,10 +866,10 @@ def operationday_toggle_view(request, pk):
             messages.success(request, f"Operasyon günü başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
         else:
             messages.error(request, f"Operasyon günü {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
-            
+
         next_url = request.GET.get('next')
         return redirect(next_url if next_url else 'tour:operation_list')
-        
+
     except Exception as e:
         logger.error(f"Operasyon günü {'geri yükleme' if day.is_delete else 'silme'} hatası: {str(e)}")
         messages.error(request, f"Operasyon günü {'geri yüklenirken' if day.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
@@ -884,10 +885,10 @@ def operationitem_toggle_view(request, pk):
     try:
         # Operasyon öğesini getir
         item = get_object_or_404(Operationitem, pk=pk)
-        
+
         # Silme/geri yükleme işlemini gerçekleştir
         success, error, is_deleted = toggle_operation_item(item)
-        
+
         if success:
             # Log kaydı oluştur
             personel, company = get_user_company_info(request.user)
@@ -900,15 +901,15 @@ def operationitem_toggle_view(request, pk):
             messages.success(request, f"Operasyon öğesi başarıyla {'geri yüklendi' if is_deleted else 'silindi'}.")
         else:
             messages.error(request, f"Operasyon öğesi {'geri yüklenirken' if is_deleted else 'silinirken'} bir hata oluştu: {error}")
-            
+
         next_url = request.GET.get('next')
         return redirect(next_url if next_url else 'tour:operation_detail', pk=item.day.operation.id)
-        
+
     except Exception as e:
         logger.error(f"Operasyon öğesi {'geri yükleme' if item.is_delete else 'silme'} hatası: {str(e)}")
         messages.error(request, f"Operasyon öğesi {'geri yüklenirken' if item.is_delete else 'silinirken'} bir hata oluştu: {str(e)}")
         return redirect('tour:dashboard')
-    
+
 
 @login_required(login_url='tour:login')
 def operation_deleted_list(request):
@@ -919,7 +920,7 @@ def operation_deleted_list(request):
     try:
         # Kullanıcı ve şirket bilgilerini al
         staff, company = get_user_company_info(request.user)
-        
+
         # Temel sorgu yapısını oluştur
         base_query = Operation.objects.select_related(
             'company',
@@ -929,32 +930,32 @@ def operation_deleted_list(request):
             'follow_staff',
             'follow_staff__user'
         ).filter(is_delete=True)
-        
+
         # Şirket filtrelemesi
         if company:
             base_query = base_query.filter(company=company)
-            
+
         # Filtreleri uygula
         filters, month, year, current_filters = get_operation_list_filters(request, company)
         queryset = base_query.filter(filters).order_by('-start')
-        
+
         # İstatistikleri hesapla
         stats = get_operation_list_stats(queryset)
-        
+
         # Yıl listesini al
         year_list = get_operation_list_year_list()
-        
+
         # Müşteri şirketlerini ve personel listesini al
         companies = Buyercompany.objects.filter(
             is_delete=False,
             **({"company": company} if company else {})
         ).only('id', 'name')
-        
+
         staffs = Personel.objects.filter(
             is_active=True,
             **({"company": company} if company else {})
         ).select_related('user').only('id', 'user__first_name', 'user__last_name')
-        
+
         # Log kaydı oluştur
         create_activity_log(
             request=request,
@@ -962,7 +963,7 @@ def operation_deleted_list(request):
             staff=staff,
             action="Operasyon listesini görüntüledi"
         )
-        
+
         # Sonuçları sayfalama
         paginator = Paginator(queryset, 50)
         page = request.GET.get('page')
@@ -972,15 +973,15 @@ def operation_deleted_list(request):
             operations = paginator.page(1)
         except EmptyPage:
             operations = paginator.page(paginator.num_pages)
-            
+
         # Context oluştur
         context = get_operation_list_context(
             operations, month, year, year_list,
             companies, staffs, stats, current_filters
         )
-        
+
         return render(request, 'operation/list.html', context)
-        
+
     except Exception as e:
         logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
         messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
@@ -995,11 +996,11 @@ def operationday_item_create(request, day_id):
     try:
         day = get_object_or_404(Operationday, id=day_id)
         staff, company = get_user_company_info(request.user)
-        
+
         if request.method == 'POST':
             form = OperationItemForm(request.POST, company=company)
             success, item, error = save_operation_day_item(form, day, company)
-            
+
             if success:
                 # Log kaydı oluştur
                 create_activity_log(
@@ -1027,9 +1028,9 @@ def operationday_item_create(request, day_id):
                 staff=staff,
                 action=get_operation_day_log_message(day, 'visit')
             )
-            
+
         return render(request, 'operation/partials/item-create.html', {'form': form, 'day': day})
-        
+
     except Exception as e:
         logger.error(f"Operasyon günü öğesi oluşturma hatası: {str(e)}")
         messages.error(request, f"Operasyon günü öğesi oluşturulurken bir hata oluştu: {str(e)}")
@@ -1046,7 +1047,7 @@ def operation_list(request):
     try:
         # Kullanıcı ve şirket bilgilerini al
         staff, company = get_user_company_info(request.user)
-        
+
         # Temel sorgu yapısını oluştur
         base_query = Operation.objects.select_related(
             'company',
@@ -1056,32 +1057,32 @@ def operation_list(request):
             'follow_staff',
             'follow_staff__user'
         ).filter(is_delete=False)
-        
+
         # Şirket filtrelemesi
         if company:
             base_query = base_query.filter(company=company)
-            
+
         # Filtreleri uygula
         filters, month, year, current_filters = get_operation_list_filters(request, company)
         queryset = base_query.filter(filters).order_by('-start')
-        
+
         # İstatistikleri hesapla
         stats = get_operation_list_stats(queryset)
-        
+
         # Yıl listesini al
         year_list = get_operation_list_year_list()
-        
+
         # Müşteri şirketlerini ve personel listesini al
         companies = Buyercompany.objects.filter(
             is_delete=False,
             **({"company": company} if company else {})
         ).only('id', 'name')
-        
+
         staffs = Personel.objects.filter(
             is_active=True,
             **({"company": company} if company else {})
         ).select_related('user').only('id', 'user__first_name', 'user__last_name')
-        
+
         # Log kaydı oluştur
         create_activity_log(
             request=request,
@@ -1089,7 +1090,7 @@ def operation_list(request):
             staff=staff,
             action="Operasyon listesini görüntüledi"
         )
-        
+
         # Sonuçları sayfalama
         paginator = Paginator(queryset, 50)
         page = request.GET.get('page')
@@ -1099,15 +1100,15 @@ def operation_list(request):
             operations = paginator.page(1)
         except EmptyPage:
             operations = paginator.page(paginator.num_pages)
-            
+
         # Context oluştur
         context = get_operation_list_context(
             operations, month, year, year_list,
             companies, staffs, stats, current_filters
         )
-        
+
         return render(request, 'operation/list.html', context)
-        
+
     except Exception as e:
         logger.error(f"Operasyon listesi hatası: {str(e)}", exc_info=True)
         messages.error(request, f"OPERASYON LİSTESİ GÖRÜNTÜLENİRKEN HATA OLUŞTU: {str(e)}")
@@ -1121,44 +1122,44 @@ def job_list(request):
     try:
         # Tarihleri hesapla
         today, tomorrow, nextday, dates = get_job_list_dates()
-        
+
         # Kullanıcı ve şirket bilgilerini al
         staff, company = get_user_company_info(request.user)
-        
+
         # Temel sorguyu oluştur
         base_query = get_job_list_base_query(dates, company)
-        
+
         # Tüm öğeleri tek sorguda al ve hafızada grupla
         all_items = base_query
-        
+
         # Sonuçları hafızada grupla
         items_by_date = {date: [] for date in dates}
         for item in all_items:
             items_by_date[item.day.date].append(item)
-            
+
         # Log kaydını oluştur
         create_job_list_log(request, company, staff)
-        
+
         # Tarih araması için değişkenler
         search_date = None
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
-        
+
         if start_date:
             # Tarih araması yap
             search_date = get_job_list_search_query(start_date, end_date, company)
-            
+
             if not search_date.exists():
                 messages.warning(request, "SEÇİLEN TARİH ARALIĞINDA GÖREV BULUNAMADI!")
                 search_date = None
             elif staff:
                 create_job_list_log(request, company, staff, True, start_date, end_date)
-                
+
         # Context oluştur
         context = get_job_list_context(today, tomorrow, nextday, items_by_date, search_date)
-        
+
         return render(request, 'job/list.html', context)
-        
+
     except Exception as e:
         messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
         return redirect('tour:dashboard')
@@ -1168,34 +1169,34 @@ def my_job_list(request):
     try:
         # Tarihleri hesapla
         today, tomorrow, nextday, dates = get_job_list_dates()
-        
+
         # Kullanıcı ve şirket bilgilerini al
         staff, company = get_user_company_info(request.user)
-        
+
         # Temel sorguyu oluştur
         base_query = get_job_list_base_query(dates, company, staff)
-        
+
         # Tüm öğeleri tek sorguda al ve hafızada grupla
         all_items = base_query
-        
+
         # Sonuçları hafızada grupla
         items_by_date = {date: [] for date in dates}
         for item in all_items:
             items_by_date[item.day.date].append(item)
-            
+
         # Log kaydını oluştur
         create_job_list_log(request, company, staff)
-        
+
         # Tarih araması için değişkenler
         search_date = None
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
-        
+
         if start_date:
             try:
                 # Tarih araması yap
                 search_date = get_job_list_search_query(start_date, end_date, company, staff)
-                
+
                 if search_date and search_date.exists():
                     create_job_list_log(request, company, staff, True, start_date, end_date)
                 else:
@@ -1204,37 +1205,37 @@ def my_job_list(request):
             except Exception as e:
                 messages.error(request, f"TARİH ARAMASINDA HATA OLUŞTU: {str(e)}")
                 search_date = None
-                
+
         # Context oluştur
         context = get_job_list_context(today, tomorrow, nextday, items_by_date, search_date)
-        
+
         return render(request, 'job/list.html', context)
-        
+
     except Exception as e:
         messages.error(request, f"İŞ LİSTESİ GÖRÜNTÜLENIRKEN HATA OLUŞTU: {str(e)}")
         return redirect('tour:dashboard')
-    
+
 @login_required(login_url='tour:login')
 def operationitemfile_create(request, pk):
     try:
         operation_item = get_object_or_404(Operationitem, pk=pk)
         operation = operation_item.day.operation
-        
+
         if request.method == 'POST':
             form = OperationFileForm(request.POST, request.FILES)
             success, file, error = save_operation_file_form(form, operation, operation_item)
-            
+
             if success:
-                return render(request, get_operation_file_partial_template(operation_item), 
+                return render(request, get_operation_file_partial_template(operation_item),
                             get_operation_file_context_data(operation_item))
             else:
                 messages.error(request, f"Dosya yüklenirken hata oluştu: {error}")
         else:
             form = OperationFileForm()
-            
-        return render(request, get_operation_file_template(operation_item), 
+
+        return render(request, get_operation_file_template(operation_item),
                      get_operation_file_context(form, operation, operation_item))
-                     
+
     except Exception as e:
         messages.error(request, f"Dosya yükleme işlemi sırasında hata oluştu: {str(e)}")
         return redirect('tour:dashboard')
@@ -1243,22 +1244,22 @@ def operationitemfile_create(request, pk):
 def operationfile_create(request, pk):
     try:
         operation = get_object_or_404(Operation, pk=pk)
-        
+
         if request.method == 'POST':
             form = OperationFileForm(request.POST, request.FILES)
             success, file, error = save_operation_file_form(form, operation)
-            
+
             if success:
-                return render(request, get_operation_file_partial_template(), 
+                return render(request, get_operation_file_partial_template(),
                             get_operation_file_context_data())
             else:
                 messages.error(request, f"Dosya yüklenirken hata oluştu: {error}")
         else:
             form = OperationFileForm()
-            
-        return render(request, get_operation_file_template(), 
+
+        return render(request, get_operation_file_template(),
                      get_operation_file_context(form, operation))
-                     
+
     except Exception as e:
         messages.error(request, f"Dosya yükleme işlemi sırasında hata oluştu: {str(e)}")
         return redirect('tour:dashboard')
@@ -1287,7 +1288,7 @@ def activity_cost_calculate():
 @login_required
 def operationitem_deleted_list(request, operation_id):
     """Silinmiş operasyon öğelerini listeler"""
-    operation = get_object_or_404(Operation, pk=operation_id)   
+    operation = get_object_or_404(Operation, pk=operation_id)
     try:
         # Temel sorguyu oluştur
         query = get_deleted_items_query(
@@ -1297,22 +1298,22 @@ def operationitem_deleted_list(request, operation_id):
             day__operation=operation,  # Sadece seçilen operasyona ait öğeleri filtrele
             is_delete=True  # Sadece silinmiş öğeleri filtrele
         )
-        
+
         # Arama parametrelerini al
         search_params = {
             'query': request.GET.get('q'),
             'start_date': request.GET.get('start_date'),
             'end_date': request.GET.get('end_date')
         }
-        
+
         # Filtreleri uygula
         query = apply_item_filters(query, search_params)
-        
+
         # Sayfalama
         paginator = Paginator(query, 10)  # Her sayfada 10 öğe
         page = request.GET.get('page', 1)
         items = paginator.get_page(page)
-        
+
         # Aktivite logu oluştur
         personel, company = get_user_company_info(request.user)
         create_activity_log(
@@ -1321,7 +1322,7 @@ def operationitem_deleted_list(request, operation_id):
             staff=personel,
             action=f"Operasyon #{operation.id} için silinmiş öğeler listelendi"
         )
-        
+
         context = {
             'items': items,
             'query': search_params['query'],
@@ -1330,10 +1331,82 @@ def operationitem_deleted_list(request, operation_id):
             'total_count': query.count(),
             'operation': operation
         }
-        
+
         return render(request, 'operation/deleted_items.html', context)
-        
+
     except Exception as e:
         logger.error(f"Silinmiş operasyon öğeleri listelenirken hata oluştu: {str(e)}")
         messages.error(request, f"Silinmiş operasyon öğeleri listelenirken bir hata oluştu: {str(e)}")
         return redirect('tour:operation_detail', pk=operation_id)
+
+
+
+def operationday_add_start(request, operation_id):
+    operation = get_object_or_404(Operation, pk=operation_id)
+    try:
+        # Mevcut günleri al
+        days = operation.days.all()
+
+        # Yeni gün ekle
+        new_day = Operationday(
+            company=operation.company,
+            operation=operation,
+            date=operation.start - timedelta(days=1),
+        )
+        new_day.save()
+        operation.start = operation.start - timedelta(days=1)
+        operation.save()
+
+        # Aktivite logu oluştur
+        personel, company = get_user_company_info(request.user)
+        create_activity_log(
+            request=request,
+            company=company,
+            staff=personel,
+            action=f"Operasyon #{operation.id} için başlangıç günü eklendi"
+        )
+
+        return redirect('tour:operation_detail', pk=operation_id)
+
+    except Exception as e:
+        logger.error(f"Başlangıç günü ekleme hatası: {str(e)}")
+        messages.error(request, f"Başlangıç günü ekleme hatası: {str(e)}")
+        return redirect('tour:operation_detail', pk=operation_id)
+
+
+
+def operationday_add_end(request, operation_id):
+    operation = get_object_or_404(Operation, pk=operation_id)
+    try:
+        # Mevcut günleri al
+        days = operation.days.all()
+
+        # Yeni gün ekle
+        new_day = Operationday(
+            company=operation.company,
+            operation=operation,
+            date=operation.finish + timedelta(days=1),
+        )
+        new_day.save()
+        operation.finish = operation.finish + timedelta(days=1)
+        operation.save()
+
+        # Aktivite logu oluştur
+        personel, company = get_user_company_info(request.user)
+        create_activity_log(
+            request=request,
+            company=company,
+            staff=personel,
+            action=f"Operasyon #{operation.id} için sona günü eklendi"
+        )
+
+        return redirect('tour:operation_detail', pk=operation_id)
+
+    except Exception as e:
+        logger.error(f"Başlangıç günü ekleme hatası: {str(e)}")
+        messages.error(request, f"Başlangıç günü ekleme hatası: {str(e)}")
+        return redirect('tour:operation_detail', pk=operation_id)
+
+
+
+

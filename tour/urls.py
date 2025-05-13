@@ -153,4 +153,6 @@ urlpatterns = [
     # Operasyon URL'leri
     path('operasyon-listesi/', views.operation_list, name='operation_list'),
     path('operationitem/deleted/<int:operation_id>/', views.operationitem_deleted_list, name='operationitem_deleted_list'),
+    path('operasyon-baslangic-gün-ekle/<int:operation_id>/', views.operationday_add_start, name='operationday_add_start'),
+    path('operasyon-bitis-gün-ekle/<int:operation_id>/', views.operationday_add_end, name='operationday_add_end'),
 ]
